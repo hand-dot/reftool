@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusIcon } from '@heroicons/react/20/solid'
+import type { Duplication } from './types';
 
 const statuses = {
   Complete: 'text-green-700 bg-green-50 ring-green-600/20',
@@ -11,35 +13,64 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-const projects = [
-  {
-    id: 1,
-    name: 'GraphQL API',
-    status: 'Complete',
-    createdBy: 'Leslie Alexander',
-    dueDate: 'March 17, 2023',
-    dueDateTime: '2023-03-17T00:00Z',
-  },
-  {
-    id: 2,
-    name: 'New benefits plan',
-    status: 'In progress',
-    createdBy: 'Leslie Alexander',
-    dueDate: 'May 5, 2023',
-    dueDateTime: '2023-05-05T00:00Z',
-  },
-  {
-    id: 3,
-    name: 'Onboarding emails',
-    status: 'In progress',
-    createdBy: 'Courtney Henry',
-    dueDate: 'May 25, 2023',
-    dueDateTime: '2023-05-25T00:00Z',
-  },
-]
+function findCommonPrefix(str1: string, str2: string) {
+  let prefix = "";
+  for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
+    if (str1[i] === str2[i]) {
+      prefix += str1[i];
+    } else {
+      break;
+    }
+  }
+
+  return prefix;
+}
 
 function ListPage() {
-  {/* TODO ちゃんと実装 */ }
+  const [duplications, setDuplications] = useState<Duplication[]>([])
+
+  useEffect(() => {
+    fetch('http://localhost:5173/detectClones')
+      .then((response) => response.json())
+      .then(({ duplications }) => {
+        setDuplications(duplications)
+      });
+    // TODO ボタンを押すと、サーバーにリクエストを送るようにする
+  }, [])
+
+
+  const projects = duplications.map((duplication) => {
+    const date = new Date(duplication.foundDate);
+    const createdAt = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}:${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+
+    let path = findCommonPrefix(duplication.duplicationA.path, duplication.duplicationB.path);
+    let duplicationATitle = duplication.duplicationA.path;
+    let duplicationBTitle = duplication.duplicationB.path;
+
+    if (duplicationATitle === path) {
+      path = ''
+    } else {
+      duplicationATitle = duplicationATitle.replace(path, '');
+      duplicationBTitle = duplicationBTitle.replace(path, '');
+    }
+
+    if (duplicationATitle === duplicationBTitle) {
+      duplicationATitle = duplicationATitle + ' (same file)'
+      duplicationBTitle = '';
+    }
+
+
+
+    return {
+      id: duplication.id,
+      path,
+      status: 'Complete',
+      format: duplication.format,
+      createdAt,
+      duplicationATitle,
+      duplicationBTitle,
+    }
+  });
 
   return (
     <div>
@@ -83,8 +114,26 @@ function ListPage() {
         {projects.map((project) => (
           <li key={project.id} className="flex items-center justify-between gap-x-6 py-5">
             <div className="min-w-0">
+              <Link to={String(project.id)} className="hover:underline flex items-baseline">
+                <h2 className="text-md font-medium text-gray-500">
+                  💥 Duplication Found!
+                </h2>
+                <span className="ml-2 text-sm text-gray-900 font-medium truncate">
+                  {project.id}
+                </span>
+              </Link>
               <div className="flex items-start gap-x-3">
-                <p className="text-sm font-semibold leading-6 text-gray-900">{project.name}</p>
+                <div className='flex flex-col'>
+                  <p className="text-sm font-semibold leading-6 text-gray-900">{project.duplicationATitle}</p>
+                  <p className="text-sm font-semibold leading-6 text-gray-900">{project.duplicationBTitle}</p>
+                </div>
+                <p
+                  className={'text-gray-700 bg-gray-50 ring-gray-600/20 rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'}
+                >
+                  {project.format}
+                </p>
+              </div>
+              <div className="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
                 <p
                   className={classNames(
                     // @ts-ignore
@@ -94,15 +143,10 @@ function ListPage() {
                 >
                   {project.status}
                 </p>
-              </div>
-              <div className="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
-                <p className="whitespace-nowrap">
-                  Due on <time dateTime={project.dueDateTime}>{project.dueDate}</time>
-                </p>
-                <svg viewBox="0 0 2 2" className="h-0.5 w-0.5 fill-current">
-                  <circle cx={1} cy={1} r={1} />
-                </svg>
-                <p className="truncate">Created by {project.createdBy}</p>
+                /
+                <p className="truncate"> {project.createdAt}</p>
+                /
+                <p className="truncate"> {project.path}</p>
               </div>
             </div>
             <div className="flex flex-none items-center gap-x-4">
@@ -110,7 +154,7 @@ function ListPage() {
                 to={String(project.id)}
                 className="hidden rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:block"
               >
-                View project<span className="sr-only">, {project.name}</span>
+                View duplication
               </Link>
             </div>
           </li>

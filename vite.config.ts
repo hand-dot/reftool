@@ -21,6 +21,6 @@ const mix = (mixPlugin as unknown as Mix).default
 export default defineConfig({
   plugins: [
     react(),
-    mix({ handler: './handler.ts' }),
+    mix({ handler: './src/server.ts' }),
   ]
 })
