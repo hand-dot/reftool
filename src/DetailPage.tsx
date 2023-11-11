@@ -20,8 +20,10 @@ function calculatePercentage(part: number, total: number) {
 
 function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
 
-  const editorElem = useRef<HTMLDivElement>(null)
-  const [editor, setEditor] = useState<monaco.editor.IStandaloneDiffEditor | null>(null)
+  const editorElemA = useRef<HTMLDivElement>(null)
+  const editorElemB = useRef<HTMLDivElement>(null)
+  const [editorA, setEditorA] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const [editorB, setEditorB] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
   const [processing, setProcessing] = useState<boolean>(false)
   const [markdown, setMarkdown] = useState<string>('')
 
@@ -33,23 +35,48 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
     if (!duplication) {
       return;
     }
+    const a = duplication.duplicationA
+    const b = duplication.duplicationB
 
-    if (editorElem.current && !editor) {
-      const a = duplication.duplicationA
-      const b = duplication.duplicationB
-
-      // TODO ここから 結局diffエディターよりも、単純に2つのエディターを並べた方がコントロールしやすいし、見やすい
-      const _editor = monaco.editor.createDiffEditor(editorElem.current, {
-        renderSideBySide: true,
+    if (editorElemA.current && !editorA) {
+      const _editor = monaco.editor.create(editorElemA.current, {
+        value: a.content,
+        language: duplication.format,
         automaticLayout: true,
         fontSize: 14,
       })
-      setEditor(_editor)
+      setEditorA(_editor)
 
-      _editor.setModel({
-        original: monaco.editor.createModel(a.content, duplication.format),
-        modified: monaco.editor.createModel(b.content, duplication.format),
+      _editor.setPosition({
+        lineNumber: a.start.line,
+        column: a.start.column || 1,
+      })
+      _editor.revealRangeInCenter({
+        startLineNumber: a.start.line,
+        startColumn: a.start.column || 1,
+        endLineNumber: a.end.line,
+        endColumn: a.end.column || 1,
       });
+      _editor.setSelections([{
+        selectionStartLineNumber: a.start.line,
+        selectionStartColumn: a.start.column || 1,
+        positionLineNumber: a.end.line,
+        positionColumn: a.end.column || 1,
+      }])
+
+      setTimeout(() => {
+        _editor.focus();
+      }, 100);
+    }
+    if (editorElemB.current && !editorB) {
+      const _editor = monaco.editor.create(editorElemB.current, {
+        value: b.content,
+        language: duplication.format,
+        automaticLayout: true,
+        fontSize: 14,
+      })
+      setEditorB(_editor)
+
       _editor.setPosition({
         lineNumber: b.start.line,
         column: b.start.column || 1,
@@ -66,12 +93,8 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
         positionLineNumber: b.end.line,
         positionColumn: b.end.column || 1,
       }])
-
-      setTimeout(() => {
-        _editor.focus();
-      }, 100);
     }
-  }, [duplication, editorElem])
+  }, [duplication, editorElemA, editorElemB])
 
 
   if (!duplication) {
@@ -96,7 +119,8 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
-        message: `Please refactor the following duplicate code.
+        // TODO プロンプトをちゃんと考える
+        message: `Please refactor the following duplicate code. レスポンスは日本語にして。
 --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
 ${a.content}
 --${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
@@ -158,7 +182,12 @@ ${b.content}
         </dl>
       </div>
 
-      <div ref={editorElem} className="h-96" />
+      <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-2 md:divide-x md:divide-y-0">
+        <div ref={editorElemA} className="h-96" />
+        <div ref={editorElemB} className="h-96" />
+      </dl>
+
+
 
       <div className="mt-20">
         <h2 className="mx-auto text-center max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">

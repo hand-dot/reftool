@@ -41,8 +41,8 @@ app.get('/duplications', async (req, res) => {
     }
 
 
-    // TODO pathをクエリパラメータを使って変えられるようにする
-    const path = ['/Users/kyohei/Develop/ntt-my-page2'];
+    // TODO ここから pathをクエリパラメータを使って変えられるようにする
+    const path = ['/Users/kyohei/Develop/pdfme'];
     const clones = await detectClones({
         path,
         minLines:10,
@@ -109,6 +109,7 @@ app.post('/gpt', async (req, res) => {
         ],
     });
 
+    // TODO ストリームにしたい
     res.json({ message: completion.choices[0].message.content })
 });
 
