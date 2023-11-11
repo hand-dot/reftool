@@ -1,110 +1,109 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react'
+import type { Duplication } from './types';
 import ReactDiffViewer from 'react-diff-viewer';
 import { HomeIcon } from '@heroicons/react/20/solid'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import 'highlight.js/styles/github.css'
 
-const markdown = `\`react-markdown\` をスタイルする際には、主に以下の方法があります：
-
-1. **CSSを使用する**：
-   - \`react-markdown\` でレンダリングされる要素には、通常のHTMLタグが使用されるので、これらに対するCSSスタイルを適用できます。
-   - 例えば、\`<h1>\` タグや \`<p>\` タグに対して、外部CSSファイルやインラインスタイルでスタイリングを行います。
-
-2. **コンポーネントレベルでのスタイリング**：
-   - \`react-markdown\` は \`components\` プロパティを使って、特定のMarkdown要素に対してカスタムのReactコンポーネントを割り当てることができます。
-   - これにより、例えば \`h1\` タグをレンダリングする際に特定のスタイルや動作を持つカスタムコンポーネントを使用できます。
-
-3. **Styled Components などのライブラリを使用する**：
-   - \`styled-components\` や \`emotion\` のようなCSS-in-JSライブラリを使用して、Markdownコンテンツにスタイルを適用することもできます。
-   - これらのライブラリを使用すると、コンポーネントに対してJavaScriptを介して直接スタイルを適用できます。
-
-以下は \`react-markdown\` にCSSスタイルを適用する基本的な例です：
-
-\`\`\`css
-/* CSSファイルでのスタイリング */
-.markdown {
-  font-family: Arial, sans-serif;
+function trimStringToLast30Chars(str: string) {
+  if (str.length > 30) {
+    return '...' + str.substring(str.length - 30);
+  }
+  return str;
 }
 
-.markdown h1 {
-  color: blue;
-}
-\`\`\`
+function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
 
-\`\`\`jsx
-// React コンポーネントでの使用例
-import ReactMarkdown from 'react-markdown';
-import './App.css'; // CSSファイルのインポート
+  const [processing, setProcessing] = useState<boolean>(false)
+  const [markdown, setMarkdown] = useState<string>('')
 
-function App() {
-  const markdown = '# これは見出しです\n\nこれは段落です。';
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [])
 
-  return (
-    <div className="App">
-      <ReactMarkdown className="markdown">
-        {markdown}
-      </ReactMarkdown>
+  if (!duplication) {
+    return <div className="text-center">
+      <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Loading...</h1>
+      <p className="mt-6 text-base leading-7 text-gray-600">If the screen does not switch even after a while, please return to the home screen. </p>
+      <div className="mt-10 flex items-center justify-center gap-x-6">
+        <Link to="/" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Go back home</Link>
+      </div>
     </div>
-  );
-}
+  }
 
-export default App;
-\`\`\`
+  const a = duplication.duplicationA
+  const b = duplication.duplicationB
 
-これらの方法を使って、\`react-markdown\` を使ったMarkdownコンテンツの見た目を自由にカスタマイズできます。`
+  const leftTitle = `${trimStringToLast30Chars(a.path)}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}`
+  const rightTitle = `${trimStringToLast30Chars(b.path)}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}`
 
-const oldCode = `
-const a = 10
-const b = 10
-const c = () => console.log('foo')
- 
-if(a > 10) {
-  console.log('bar')
-}
- 
-console.log('done')
-`;
-const newCode = `
-const a = 10
-const boo = 10
- 
-if(a === 10) {
-  console.log('bar')
-}
-`;
 
-function DetailPage() {
+  const leftTitleHref = `vscode://file${a.path}:${a.start.line}`
+  const rightTitleHref = `vscode://file${b.path}:${b.start.line}`
+
+  const callGpt = () => {
+    if (processing) {
+      return;
+    }
+    setProcessing(true)
+    fetch('http://localhost:5173/gpt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', },
+      body: JSON.stringify({
+        message: `下記の重複したコードをリファクタリングしてください。
+--${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
+${a.content}
+--${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
+${b.content}
+`}),
+    })
+      .then((response) => response.json())
+      .then(({ message }) => {
+        setMarkdown(message)
+      }).finally(() => {
+        setProcessing(false)
+      })
+  }
+
   return (
     <div>
+      {/* TODO ここから とりあえず表示はできたが思ったよりも使いにくいのでmonacoに切り替える */}
+      {/* https://chat.openai.com/share/b0a3860b-7cea-45f0-8a68-5f90a45fa03c */}
       <ReactDiffViewer
-        oldValue={oldCode}
-        newValue={newCode}
-        leftTitle={<a className="font-medium text-blue-600 dark:text-blue-500 hover:underline" href="#">oldCode</a>}
-        rightTitle={<a className="font-medium text-blue-600 dark:text-blue-500 hover:underline" href="#">newCode</a>}
-        splitView={true} />
+        oldValue={a.content}
+        newValue={b.content}
+        leftTitle={<a className="font-medium text-blue-600 dark:text-blue-500 hover:underline" href={leftTitleHref} >{leftTitle}</a>}
+        rightTitle={<a className="font-medium text-blue-600 dark:text-blue-500 hover:underline" href={rightTitleHref}>{rightTitle}</a>}
+        splitView={true}
+        extraLinesSurroundingDiff={100}
+      />
+
 
       <div className="mt-20">
         <h2 className="mx-auto text-center max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-          Boost your productivity today.
+          Receive GPT's refactoring suggestions
         </h2>
-        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
-          Incididunt sint fugiat pariatur cupidatat consectetur sit cillum anim id veniam aliqua proident excepteur
-          commodo do ea.
-        </p>
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <button
-            type="button"
-            className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Button text
-          </button>
-        </div>
-        <div className="mt-20 overflow-hidden rounded-lg shadow">
-          <div className="text-left px-4 py-5 sm:p-6 markdown-body">
-            <Markdown rehypePlugins={[remarkGfm, rehypeHighlight]}>{markdown}</Markdown>
+
+        {markdown ?
+          <div className="mt-10 overflow-hidden rounded-lg shadow">
+            <div className="text-left px-4 py-5 sm:p-6 markdown-body">
+              <Markdown rehypePlugins={[remarkGfm, rehypeHighlight]}>{markdown}</Markdown>
+            </div>
           </div>
-        </div>
+          :
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <button
+              onClick={callGpt}
+              disabled={processing}
+              type="button"
+              className="flex items-center justify-center rounded-md border border-transparent bg-blue-500 py-2 px-4 text-base sm:text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+              {processing ? 'Processing...' : 'Call GPT'}
+            </button>
+          </div>}
       </div>
 
       {/* Back to home */}

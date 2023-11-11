@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusIcon } from '@heroicons/react/20/solid'
 import type { Duplication } from './types';
+import { findCommonPrefix } from './utils'
 
 const statuses = {
   Complete: 'text-green-700 bg-green-50 ring-green-600/20',
@@ -13,31 +13,9 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-function findCommonPrefix(str1: string, str2: string) {
-  let prefix = "";
-  for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
-    if (str1[i] === str2[i]) {
-      prefix += str1[i];
-    } else {
-      break;
-    }
-  }
 
-  return prefix;
-}
 
-function ListPage() {
-  const [duplications, setDuplications] = useState<Duplication[]>([])
-
-  useEffect(() => {
-    fetch('http://localhost:5173/detectClones')
-      .then((response) => response.json())
-      .then(({ duplications }) => {
-        setDuplications(duplications)
-      });
-    // TODO ボタンを押すと、サーバーにリクエストを送るようにする
-  }, [])
-
+function ListPage({ duplications }: { duplications: Duplication[] }) {
 
   const projects = duplications.map((duplication) => {
     const date = new Date(duplication.foundDate);
@@ -53,13 +31,6 @@ function ListPage() {
       duplicationATitle = duplicationATitle.replace(path, '');
       duplicationBTitle = duplicationBTitle.replace(path, '');
     }
-
-    if (duplicationATitle === duplicationBTitle) {
-      duplicationATitle = duplicationATitle + ' (same file)'
-      duplicationBTitle = '';
-    }
-
-
 
     return {
       id: duplication.id,
@@ -90,8 +61,9 @@ function ListPage() {
             d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
           />
         </svg>
+        {/* TODO フォルダを選択できるようにする */}
         <h3 className="mt-2 text-sm font-semibold text-gray-900">No projects</h3>
-        <p className="mt-1 text-sm text-gray-500">Get started by creating a new project.</p>
+        <p className="mt-1 text-sm text-gray-500">Please select the folder to start refactoring</p>
         <div className="mt-6">
           <button
             type="button"
@@ -121,17 +93,30 @@ function ListPage() {
                 <span className="ml-2 text-sm text-gray-900 font-medium truncate">
                   {project.id}
                 </span>
-              </Link>
-              <div className="flex items-start gap-x-3">
-                <div className='flex flex-col'>
-                  <p className="text-sm font-semibold leading-6 text-gray-900">{project.duplicationATitle}</p>
-                  <p className="text-sm font-semibold leading-6 text-gray-900">{project.duplicationBTitle}</p>
-                </div>
+                {project.duplicationATitle === project.duplicationBTitle &&
+                  <p
+                    className={'ml-2 text-pink-700 bg-pink-50 ring-pink-600/20 rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'}>
+                    same file
+                  </p>}
+
                 <p
-                  className={'text-gray-700 bg-gray-50 ring-gray-600/20 rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'}
+                  className={'ml-2 text-gray-700 bg-gray-50 ring-gray-600/20 rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'}
                 >
                   {project.format}
                 </p>
+              </Link>
+              <div className="flex items-start gap-x-3">
+                <div className='flex flex-col'>
+                  {project.duplicationATitle === project.duplicationBTitle ? (
+                    <>
+                      <p className="text-sm font-semibold leading-6 text-gray-900">A & B: {project.duplicationATitle}</p>
+                    </>) : (
+                    <>
+                      <p className="text-sm font-semibold leading-6 text-gray-900">A: {project.duplicationATitle}</p>
+                      <p className="text-sm font-semibold leading-6 text-gray-900">B: {project.duplicationBTitle}</p>
+                    </>)}
+
+                </div>
               </div>
               <div className="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
                 <p
@@ -160,7 +145,7 @@ function ListPage() {
           </li>
         ))}
       </ul>
-    </div>
+    </div >
   );
 }
 

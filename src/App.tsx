@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ListPage from './ListPage';
 import DetailPage from './DetailPage';
-import { useEffect,useState } from 'react'
+import type { Duplication } from './types';
+import { useEffect, useState } from 'react'
 import { Disclosure, } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { HomeIcon } from '@heroicons/react/20/solid'
-
 
 const navigation: { name: string; href: string; current: boolean }[] = [
   { name: 'GitHub', href: 'https://github.com/hand-dot/my-refactoring-tool', current: false },
@@ -20,20 +20,34 @@ function App() {
 
   const location = useLocation();
   const currentPath = location.pathname;
+  const [_, currentPathId] = currentPath.split('/');
 
   const [pages, setPages] = useState<{ name: string; href: string; current: boolean }[]>([])
 
+  const [duplications, setDuplications] = useState<Duplication[]>([])
 
   useEffect(() => {
-    const [_, currentPathId] = currentPath.split('/');
-    console.log(currentPathId)
-    if (currentPathId) {
-      // TODO 必要に応じて ここでIDからファイル名などをフェッチする
-      setPages([{ name: 'GraphQL API', href: `/${currentPathId}`, current: true }])
+    fetch('http://localhost:5173/duplications')
+      .then((response) => response.json())
+      .then(({ duplications }) => {
+        setDuplications(duplications)
+      });
+  }, [])
+
+
+  useEffect(() => {
+
+    if (!currentPathId || duplications.length === 0) {
+      setPages([])
+      return;
+    }
+    const currentDuplication = duplications.find((duplication) => duplication.id === currentPathId);
+    if (currentDuplication) {
+      setPages([{ name: currentDuplication.duplicationA.path, href: `/${currentPathId}`, current: true }])
     } else {
       setPages([])
     }
-  }, [currentPath])
+  }, [currentPath, duplications])
 
   return (
     <div>
@@ -138,8 +152,8 @@ function App() {
       </nav>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10">
         <Routes>
-          <Route path="/" element={<ListPage />} />
-          <Route path="/:id" element={<DetailPage />} />
+          <Route path="/" element={<ListPage duplications={duplications} />} />
+          <Route path="/:id" element={<DetailPage duplication={duplications.find((duplication) => duplication.id === currentPathId)} />} />
         </Routes>
       </div>
     </div>

@@ -1,11 +1,18 @@
 import { IClone, ITokenLocation } from '@jscpd/core';
 import { detectClones } from 'jscpd';
+import OpenAI from 'openai';
 import express from 'express';
 import type { Duplication } from './types';
 import { uuid } from './utils';
+import dotenv from 'dotenv';
 
-// https://github.com/kucherenko/jscpd
-// https://github.com/openai/openai-node
+dotenv.config();
+
+const DB: {
+    duplications: Duplication[]
+} = {
+    duplications: []
+}
 
 const extractDuplicationDetails = (duplication: {
     start: ITokenLocation,
@@ -20,9 +27,19 @@ const extractDuplicationDetails = (duplication: {
 })
 
 const app = express()
-app.get('/detectClones', async (req, res) => {
+app.use(express.json());
+
+app.get('/duplications', async (req, res) => {
+
+    // 必要に応じてリフレッシュできるようにする
+    if (DB.duplications.length > 0) {
+        res.json({ duplications: DB.duplications })
+        return;
+    }
+
+
     // TODO pathをクエリパラメータを使って変えられるようにする
-    const path = ['/Users/kyohei/Develop/pdfme/packages'];
+    const path = ['/Users/kyohei/Develop/next-labelmake.jp/src'];
     const clones = await detectClones({
         path,
         silent: true,
@@ -59,8 +76,6 @@ app.get('/detectClones', async (req, res) => {
         ]
     });
 
-    // console.log(clones[0])
-
     const duplications: Duplication[] = clones.map((clone: IClone) => ({
         id: uuid(),
         format: clone.format,
@@ -69,7 +84,27 @@ app.get('/detectClones', async (req, res) => {
         duplicationB: extractDuplicationDetails(clone.duplicationB)
     }));
 
+    DB.duplications = duplications;
+
     res.json({ duplications })
 })
+
+app.post('/gpt', async (req, res) => {
+    const { message } = req.body;
+
+    const openAi = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const completion = await openAi.chat.completions.create({
+        model: "gpt-4-1106-preview",
+        messages: [
+            {
+                role: "user",
+                content: message,
+            },
+        ],
+    });
+
+    res.json({ message: completion.choices[0].message.content })
+});
 
 export const handler = app

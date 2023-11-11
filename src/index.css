@@ -3,8 +3,16 @@
 @tailwind utilities;
 
 
+ul {
+  list-style-type: disc;
+}
+ol {
+  list-style-type: decimal;
+}
+
 /* https://github.com/sindresorhus/github-markdown-css?tab=readme-ov-file */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {  */
+@media (prefers-color-scheme: light) { 
     .markdown-body,
     [data-theme="dark"] {
       /*dark*/
