@@ -119,7 +119,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
-        // TODO プロンプトをちゃんと考える
+        // FIXME プロンプトをちゃんと考える
         message: `Please refactor the following duplicate code. レスポンスは日本語にして。
 --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
 ${a.content}
@@ -156,10 +156,11 @@ ${b.content}
     <div>
       <div>
         <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-2 md:divide-x md:divide-y-0">
+          {/* TODO 削除可能なコードの行数を出す */}
           {stats.map((item) => (
             <div key={item.id} className="px-4 py-5 sm:p-6">
               <dt className="text-base font-normal text-gray-900">{item.fileName}</dt>
-              <span className="text-sm font-medium text-gray-500">{item.path}</span>
+              <span className="text-sm font-medium text-gray-500 break-words">{item.path}</span>
               <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
                 <div className="flex items-baseline text-xl font-semibold text-indigo-600">
                   Duplicate code ratio in file: {item.stat}
@@ -195,7 +196,7 @@ ${b.content}
         </h2>
 
         {markdown ?
-          <div className="mt-10 overflow-hidden rounded-lg shadow">
+          <div className="mt-10 overflow-hidden rounded-lg">
             <div className="text-left px-4 py-5 sm:p-6 markdown-body">
               <Markdown rehypePlugins={[remarkGfm, rehypeHighlight]}>{markdown}</Markdown>
             </div>

@@ -10,6 +10,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const projects: string[] = [import.meta.env.VITE_PARAM1, import.meta.env.VITE_PARAM2].filter(Boolean) as string[];
+
 const DB: {
     duplications: Duplication[]
 } = {
@@ -33,22 +35,14 @@ const app = express()
 app.use(express.json());
 
 app.get('/duplications', async (req, res) => {
-
-    // TODO もしくはここでコマンドライン引数を受け取ってもよい
-    if(!req.query.path){
-        res.json({ duplications: [] })
-        return;
-    }
-
-    // TODO 必要に応じてリフレッシュできるようにする
+    // FIXME 必要に応じてリフレッシュできるようにする
     if (DB.duplications.length > 0) {
         res.json({ duplications: DB.duplications })
         return;
     }
 
-    const path = [req.query.path as string]
     const clones = await detectClones({
-        path,
+        path: projects,
         minLines: 10,
         minTokens: 75,
         silent: true,
@@ -58,10 +52,6 @@ app.get('/duplications', async (req, res) => {
             '**/dist/**',
             '**/build/**',
             '**/coverage/**',
-            '**/__tests__/**',
-            '**/tests/**',
-            '**/test/**',
-            '**/__mocks__/**',
             '**/__snapshots__/**',
             '**/__fixtures__/**',
             '**/*.json',
@@ -82,7 +72,7 @@ app.get('/duplications', async (req, res) => {
             '**/*.woff2',
             '**/*.eot',
             '**/*.map',
-        ]
+        ],
     });
 
     const duplications: Duplication[] = clones.map((clone: IClone) => ({
@@ -93,7 +83,11 @@ app.get('/duplications', async (req, res) => {
         duplicationB: extractDuplicationDetails(clone.duplicationB)
     }));
 
+    // TODO ここから duplicationsを並び替える(削除できる行数で)
+
     DB.duplications = duplications;
+
+    console.log('duplications', duplications);
 
     res.json({ duplications })
 })
@@ -113,7 +107,7 @@ app.post('/gpt', async (req, res) => {
         ],
     });
 
-    // TODO ストリームにしたい
+    // FIXME ストリームにしたい
     res.json({ message: completion.choices[0].message.content })
 });
 

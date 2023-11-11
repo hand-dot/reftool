@@ -27,7 +27,6 @@ function App() {
   const [duplications, setDuplications] = useState<Duplication[]>([])
 
   useEffect(() => {
-    // TODO ここで起動時引数を取得して、?path= で指定されたパスを開く
     fetch('http://localhost:5173/duplications')
       .then((response) => response.json())
       .then(({ duplications }) => {
@@ -44,7 +43,8 @@ function App() {
     }
     const currentDuplication = duplications.find((duplication) => duplication.id === currentPathId);
     if (currentDuplication) {
-      setPages([{ name: `${currentDuplication.duplicationA.path} - ${currentDuplication.duplicationB.path}`, href: `/${currentPathId}`, current: true }])
+      const name = currentDuplication.duplicationA.path === currentDuplication.duplicationB.path ? currentDuplication.duplicationA.path : `${currentDuplication.duplicationA.path} - ${currentDuplication.duplicationB.path}`
+      setPages([{ name, href: `/${currentPathId}`, current: true }])
     } else {
       setPages([])
     }

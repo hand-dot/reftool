@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { PlusIcon } from '@heroicons/react/20/solid'
 import type { Duplication } from './types';
 import { findCommonPrefix } from './utils'
 
@@ -102,6 +101,7 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
                 </p>
                 /
                 <p className="truncate"> {project.createdAt}</p>
+                {/* TODO 削除可能なコードの行数を出す */}
               </div>
             </div>
             <div className="flex flex-none items-center gap-x-4">
