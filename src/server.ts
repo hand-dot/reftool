@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import * as path from 'path';
 import { IClone, ITokenLocation } from '@jscpd/core';
 import { detectClones } from 'jscpd';
 import OpenAI from 'openai';
@@ -23,7 +25,8 @@ const extractDuplicationDetails = (duplication: {
     start: duplication.start,
     end: duplication.end,
     path: duplication.sourceId,
-    content: duplication.fragment || ''
+    fragment: duplication.fragment || '',
+    content: readFileSync(path.join(duplication.sourceId), 'utf-8')
 })
 
 const app = express()
@@ -39,9 +42,11 @@ app.get('/duplications', async (req, res) => {
 
 
     // TODO pathをクエリパラメータを使って変えられるようにする
-    const path = ['/Users/kyohei/Develop/next-labelmake.jp/src'];
+    const path = ['/Users/kyohei/Develop/ntt-my-page2'];
     const clones = await detectClones({
         path,
+        minLines:10,
+        minTokens:75,
         silent: true,
         gitignore: true,
         ignore: [

@@ -43,7 +43,7 @@ function App() {
     }
     const currentDuplication = duplications.find((duplication) => duplication.id === currentPathId);
     if (currentDuplication) {
-      setPages([{ name: currentDuplication.duplicationA.path, href: `/${currentPathId}`, current: true }])
+      setPages([{ name: `${currentDuplication.duplicationA.path} - ${currentDuplication.duplicationB.path}`, href: `/${currentPathId}`, current: true }])
     } else {
       setPages([])
     }
@@ -150,7 +150,7 @@ function App() {
           ))}
         </ol>
       </nav>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-5">
         <Routes>
           <Route path="/" element={<ListPage duplications={duplications} />} />
           <Route path="/:id" element={<DetailPage duplication={duplications.find((duplication) => duplication.id === currentPathId)} />} />

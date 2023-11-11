@@ -45,7 +45,7 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
 
   return (
     <div>
-      <div className="text-center mb-10">
+      <div className="text-center mb-10 mt-5">
         <svg
           className="mx-auto h-12 w-12 text-gray-400"
           fill="none"
@@ -61,7 +61,6 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
             d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
           />
         </svg>
-        {/* TODO フォルダを選択できるようにする */}
         <h3 className="mt-2 text-sm font-semibold text-gray-900">No projects</h3>
         <p className="mt-1 text-sm text-gray-500">Please select the folder to start refactoring</p>
         <div className="mt-6">
@@ -74,7 +73,7 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
           </button>
         </div>
       </div>
-      <div className="relative my-20">
+      <div className="relative mt-20 mb-5">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300" />
         </div>
@@ -82,6 +81,17 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
           <span className="bg-white px-2 text-sm text-gray-500">Continue</span>
         </div>
       </div>
+
+
+      <div className="mb-5 px-4 sm:px-0">
+        <h3 className="text-2xl font-semibold leading-7 text-gray-900">Diagnosis Results</h3>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500">Detected
+          <span className="mx-1 font-medium text-gray-900 underline">
+            {projects.length}
+          </span> instances of duplicate code.</p>
+      </div>
+
+
       <ul role="list" className="divide-y divide-gray-100">
         {projects.map((project) => (
           <li key={project.id} className="flex items-center justify-between gap-x-6 py-5">
@@ -112,8 +122,10 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
                       <p className="text-sm font-semibold leading-6 text-gray-900">A & B: {project.duplicationATitle}</p>
                     </>) : (
                     <>
-                      <p className="text-sm font-semibold leading-6 text-gray-900">A: {project.duplicationATitle}</p>
-                      <p className="text-sm font-semibold leading-6 text-gray-900">B: {project.duplicationBTitle}</p>
+                      <p className="text-sm font-semibold leading-6 text-gray-900">A: {project.duplicationATitle} - B: {project.duplicationBTitle}</p>
+                      <div className="flex items-center gap-x-2 text-xs leading-5 text-gray-500">
+                        <p className="truncate"> {project.path}</p>
+                      </div>
                     </>)}
 
                 </div>
@@ -130,8 +142,6 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
                 </p>
                 /
                 <p className="truncate"> {project.createdAt}</p>
-                /
-                <p className="truncate"> {project.path}</p>
               </div>
             </div>
             <div className="flex flex-none items-center gap-x-4">
@@ -139,7 +149,7 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
                 to={String(project.id)}
                 className="hidden rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:block"
               >
-                View duplication
+                View detail
               </Link>
             </div>
           </li>

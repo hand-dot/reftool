@@ -1,28 +1,78 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import type { Duplication } from './types';
-import ReactDiffViewer from 'react-diff-viewer';
 import { HomeIcon } from '@heroicons/react/20/solid'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import { monaco } from "./editor";
 import 'highlight.js/styles/github.css'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid'
 
-function trimStringToLast30Chars(str: string) {
-  if (str.length > 30) {
-    return '...' + str.substring(str.length - 30);
-  }
-  return str;
+function getFileName(path: string) {
+  return path.split('/').pop();
 }
+
+function calculatePercentage(part: number, total: number) {
+  return (part / total * 100).toFixed(2) + '%';
+}
+
 
 function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
 
+  const editorElem = useRef<HTMLDivElement>(null)
+  const [editor, setEditor] = useState<monaco.editor.IStandaloneDiffEditor | null>(null)
   const [processing, setProcessing] = useState<boolean>(false)
   const [markdown, setMarkdown] = useState<string>('')
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [])
+
+  useEffect(() => {
+    if (!duplication) {
+      return;
+    }
+
+    if (editorElem.current && !editor) {
+      const a = duplication.duplicationA
+      const b = duplication.duplicationB
+
+      // TODO ここから 結局diffエディターよりも、単純に2つのエディターを並べた方がコントロールしやすいし、見やすい
+      const _editor = monaco.editor.createDiffEditor(editorElem.current, {
+        renderSideBySide: true,
+        automaticLayout: true,
+        fontSize: 14,
+      })
+      setEditor(_editor)
+
+      _editor.setModel({
+        original: monaco.editor.createModel(a.content, duplication.format),
+        modified: monaco.editor.createModel(b.content, duplication.format),
+      });
+      _editor.setPosition({
+        lineNumber: b.start.line,
+        column: b.start.column || 1,
+      })
+      _editor.revealRangeInCenter({
+        startLineNumber: b.start.line,
+        startColumn: b.start.column || 1,
+        endLineNumber: b.end.line,
+        endColumn: b.end.column || 1,
+      });
+      _editor.setSelections([{
+        selectionStartLineNumber: b.start.line,
+        selectionStartColumn: b.start.column || 1,
+        positionLineNumber: b.end.line,
+        positionColumn: b.end.column || 1,
+      }])
+
+      setTimeout(() => {
+        _editor.focus();
+      }, 100);
+    }
+  }, [duplication, editorElem])
+
 
   if (!duplication) {
     return <div className="text-center">
@@ -37,13 +87,6 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
   const a = duplication.duplicationA
   const b = duplication.duplicationB
 
-  const leftTitle = `${trimStringToLast30Chars(a.path)}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}`
-  const rightTitle = `${trimStringToLast30Chars(b.path)}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}`
-
-
-  const leftTitleHref = `vscode://file${a.path}:${a.start.line}`
-  const rightTitleHref = `vscode://file${b.path}:${b.start.line}`
-
   const callGpt = () => {
     if (processing) {
       return;
@@ -53,7 +96,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
-        message: `下記の重複したコードをリファクタリングしてください。
+        message: `Please refactor the following duplicate code.
 --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
 ${a.content}
 --${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
@@ -68,19 +111,54 @@ ${b.content}
       })
   }
 
+  const aPath = `${(a.path)}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}`
+  const bPath = `${(b.path)}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}`
+
+  const aHref = `vscode://file${a.path}:${a.start.line}`
+  const bHref = `vscode://file${b.path}:${b.start.line}`
+
+  const aContentRow = a.content.split('\n').length
+  const bContentRow = b.content.split('\n').length
+
+  const aFragmentRow = a.end.line - a.start.line
+  const bFragmentRow = b.end.line - b.start.line
+
+  const stats = [
+    { id: 'a', href: aHref, fileName: getFileName(a.path), path: aPath, stat: calculatePercentage(aFragmentRow, aContentRow) },
+    { id: 'b', href: bHref, fileName: getFileName(b.path), path: bPath, stat: calculatePercentage(bFragmentRow, bContentRow) },
+  ]
+
   return (
     <div>
-      {/* TODO ここから とりあえず表示はできたが思ったよりも使いにくいのでmonacoに切り替える */}
-      {/* https://chat.openai.com/share/b0a3860b-7cea-45f0-8a68-5f90a45fa03c */}
-      <ReactDiffViewer
-        oldValue={a.content}
-        newValue={b.content}
-        leftTitle={<a className="font-medium text-blue-600 dark:text-blue-500 hover:underline" href={leftTitleHref} >{leftTitle}</a>}
-        rightTitle={<a className="font-medium text-blue-600 dark:text-blue-500 hover:underline" href={rightTitleHref}>{rightTitle}</a>}
-        splitView={true}
-        extraLinesSurroundingDiff={100}
-      />
+      <div>
+        <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-2 md:divide-x md:divide-y-0">
+          {stats.map((item) => (
+            <div key={item.id} className="px-4 py-5 sm:p-6">
+              <dt className="text-base font-normal text-gray-900">{item.fileName}</dt>
+              <span className="text-sm font-medium text-gray-500">{item.path}</span>
+              <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
+                <div className="flex items-baseline text-xl font-semibold text-indigo-600">
+                  Duplicate code ratio in file: {item.stat}
+                </div>
+                <div
+                  className={'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0'}
+                >
+                  <a href={item.href} > <button
+                    type="button"
+                    className="inline-flex items-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  >
+                    <ArrowTopRightOnSquareIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
+                    Open in VSCode
+                  </button></a>
 
+                </div>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div ref={editorElem} className="h-96" />
 
       <div className="mt-20">
         <h2 className="mx-auto text-center max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
@@ -100,7 +178,7 @@ ${b.content}
               disabled={processing}
               type="button"
               className="flex items-center justify-center rounded-md border border-transparent bg-blue-500 py-2 px-4 text-base sm:text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            >
               {processing ? 'Processing...' : 'Call GPT'}
             </button>
           </div>}

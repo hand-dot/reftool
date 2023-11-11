@@ -5,6 +5,7 @@ interface DuplicationContent {
     start: ITokenLocation;
     end: ITokenLocation;
     path: string;
+    fragment: string;
     content: string;
 }
 
