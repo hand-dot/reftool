@@ -27,6 +27,7 @@ function App() {
   const [duplications, setDuplications] = useState<Duplication[]>([])
 
   useEffect(() => {
+    // TODO ここで起動時引数を取得して、?path= で指定されたパスを開く
     fetch('http://localhost:5173/duplications')
       .then((response) => response.json())
       .then(({ duplications }) => {

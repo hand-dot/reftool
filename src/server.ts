@@ -34,19 +34,23 @@ app.use(express.json());
 
 app.get('/duplications', async (req, res) => {
 
-    // 必要に応じてリフレッシュできるようにする
+    // TODO もしくはここでコマンドライン引数を受け取ってもよい
+    if(!req.query.path){
+        res.json({ duplications: [] })
+        return;
+    }
+
+    // TODO 必要に応じてリフレッシュできるようにする
     if (DB.duplications.length > 0) {
         res.json({ duplications: DB.duplications })
         return;
     }
 
-
-    // TODO ここから pathをクエリパラメータを使って変えられるようにする
-    const path = ['/Users/kyohei/Develop/pdfme'];
+    const path = [req.query.path as string]
     const clones = await detectClones({
         path,
-        minLines:10,
-        minTokens:75,
+        minLines: 10,
+        minTokens: 75,
         silent: true,
         gitignore: true,
         ignore: [
