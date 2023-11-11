@@ -35,7 +35,7 @@ const app = express()
 app.use(express.json());
 
 app.get('/duplications', async (req, res) => {
-    // FIXME 必要に応じてリフレッシュできるようにする
+    // FIXME 必要に応じてリフレッシュできるようにする いや、むしろ変更があれば勝手にリフレッシュするべき
     if (DB.duplications.length > 0) {
         res.json({ duplications: DB.duplications })
         return;

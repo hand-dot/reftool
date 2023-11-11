@@ -7,6 +7,7 @@ export const uuid = () =>
         return v.toString(16);
     });
 
+// FIXME スラッシュで区切らず、文字列の比較のみ行なっているので、正しいファイル名でない可能性がある
 export const findCommonPrefix = (str1: string, str2: string) => {
     let prefix = "";
     for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
