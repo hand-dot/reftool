@@ -43,7 +43,7 @@ function App() {
     }
     const currentDuplication = duplications.find((duplication) => duplication.id === currentPathId);
     if (currentDuplication) {
-      const name = currentDuplication.duplicationA.path === currentDuplication.duplicationB.path ? currentDuplication.duplicationA.path : `${currentDuplication.duplicationA.path} - ${currentDuplication.duplicationB.path}`
+      const name = 'Duplicated Code Diagnostic Result'
       setPages([{ name, href: `/${currentPathId}`, current: true }])
     } else {
       setPages([])

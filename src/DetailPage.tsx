@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react'
 import type { Duplication } from './types';
+import { getPotentialRemovals } from './utils';
 import { HomeIcon } from '@heroicons/react/20/solid'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -102,7 +103,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Loading...</h1>
       <p className="mt-6 text-base leading-7 text-gray-600">If the screen does not switch even after a while, please return to the home screen. </p>
       <div className="mt-10 flex items-center justify-center gap-x-6">
-        <Link to="/" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Go back home</Link>
+        <Link to="/" className="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Go back home</Link>
       </div>
     </div>
   }
@@ -148,21 +149,35 @@ ${b.content}
   const bFragmentRow = b.end.line - b.start.line
 
   const stats = [
-    { id: 'a', href: aHref, fileName: getFileName(a.path), path: aPath, stat: calculatePercentage(aFragmentRow, aContentRow) },
-    { id: 'b', href: bHref, fileName: getFileName(b.path), path: bPath, stat: calculatePercentage(bFragmentRow, bContentRow) },
+    { id: 'a', ref: editorElemA, href: aHref, fileName: getFileName(a.path), path: aPath, stat: calculatePercentage(aFragmentRow, aContentRow) },
+    { id: 'b', ref: editorElemB, href: bHref, fileName: getFileName(b.path), path: bPath, stat: calculatePercentage(bFragmentRow, bContentRow) },
   ]
 
   return (
     <div>
       <div>
-        <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-2 md:divide-x md:divide-y-0">
-          {/* TODO 削除可能なコードの行数を出す */}
+        <div className="border-b border-gray-200 pb-5 mb-5 px-4 sm:px-0">
+          <h3 className="text-2xl font-semibold leading-7 text-gray-900">Duplicated Code Diagnostic Result</h3>
+          <p className="mt-1 text-sm leading-6 text-gray-500">
+            Duplicates have been found in the following file, spanning
+            <span className="mx-1 font-medium text-gray-900 underline">
+              {getPotentialRemovals(a)} lines
+            </span>.
+            <br />
+            There is potential to refactor and consolidate  <span className="mx-1 font-medium text-gray-900 underline">{getPotentialRemovals(a)} lines </span>of code.
+            Please check the duplicated code using the editor below.<br />
+            <br />
+            Additionally, you can obtain <a className='text-blue-600 dark:text-blue-500 hover:underline' href="#gpt">GPT-driven refactoring advice</a> using the duplicate information.
+          </p>
+        </div>
+
+        <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white md:grid-cols-2 md:divide-x md:divide-y-0">
           {stats.map((item) => (
-            <div key={item.id} className="px-4 py-5 sm:p-6">
+            <div key={item.id} className={item.id === 'a' ? '' : "pl-4"}>
               <dt className="text-base font-normal text-gray-900">{item.fileName}</dt>
-              <span className="text-sm font-medium text-gray-500 break-words">{item.path}</span>
-              <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
-                <div className="flex items-baseline text-xl font-semibold text-indigo-600">
+              <span className="text-xs font-medium text-gray-500 break-words">{item.path}</span>
+              <dd className="mt-1 mb-5 flex items-baseline justify-between md:block lg:flex">
+                <div className="flex items-baseline text-xl font-semibold text-blue-600">
                   Duplicate code ratio in file: {item.stat}
                 </div>
                 <div
@@ -170,7 +185,7 @@ ${b.content}
                 >
                   <a href={item.href} > <button
                     type="button"
-                    className="inline-flex items-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="inline-flex items-center gap-x-2 rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                   >
                     <ArrowTopRightOnSquareIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
                     Open in VSCode
@@ -178,22 +193,22 @@ ${b.content}
 
                 </div>
               </dd>
+              <div ref={item.ref} className="h-4/5" />
             </div>
           ))}
         </dl>
       </div>
 
-      <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-2 md:divide-x md:divide-y-0">
-        <div ref={editorElemA} className="h-96" />
-        <div ref={editorElemB} className="h-96" />
-      </dl>
 
 
 
       <div className="mt-20">
-        <h2 className="mx-auto text-center max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+        <h2 id="gpt" className="mx-auto text-center max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
           Receive GPT's refactoring suggestions
         </h2>
+        <p className="mt-2 text-center text-gray-500">
+          Let's obtain refactoring advice from GPT using the above duplicated code information.
+        </p>
 
         {markdown ?
           <div className="mt-10 overflow-hidden rounded-lg">

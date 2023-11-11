@@ -5,7 +5,7 @@ import { detectClones } from 'jscpd';
 import OpenAI from 'openai';
 import express from 'express';
 import type { Duplication } from './types';
-import { uuid } from './utils';
+import { uuid, getPotentialRemovals } from './utils';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -81,13 +81,9 @@ app.get('/duplications', async (req, res) => {
         foundDate: clone.foundDate || 0,
         duplicationA: extractDuplicationDetails(clone.duplicationA),
         duplicationB: extractDuplicationDetails(clone.duplicationB)
-    }));
-
-    // TODO ここから duplicationsを並び替える(削除できる行数で)
+    })).sort((a, b) => getPotentialRemovals(b.duplicationA) - getPotentialRemovals(a.duplicationA));
 
     DB.duplications = duplications;
-
-    console.log('duplications', duplications);
 
     res.json({ duplications })
 })
@@ -98,7 +94,7 @@ app.post('/gpt', async (req, res) => {
     const openAi = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const completion = await openAi.chat.completions.create({
-        model: "gpt-4-1106-preview",
+        model: "gpt-4",
         messages: [
             {
                 role: "user",

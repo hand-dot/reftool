@@ -1,16 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Duplication } from './types';
-import { findCommonPrefix } from './utils'
-
-const statuses = {
-  Complete: 'text-green-700 bg-green-50 ring-green-600/20',
-  'In progress': 'text-gray-600 bg-gray-50 ring-gray-500/10',
-  Archived: 'text-yellow-800 bg-yellow-50 ring-yellow-600/20',
-}
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ')
-}
+import { findCommonPrefix, getPotentialRemovals } from './utils'
 
 function ListPage({ duplications }: { duplications: Duplication[] }) {
 
@@ -32,22 +22,30 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
     return {
       id: duplication.id,
       path,
-      status: 'Complete',
       format: duplication.format,
       createdAt,
       duplicationATitle,
       duplicationBTitle,
+      potentialRemovals: getPotentialRemovals(duplication.duplicationA)
     }
   });
 
   return (
     <div>
-      <div className="mb-5 px-4 sm:px-0">
-        <h3 className="text-2xl font-semibold leading-7 text-gray-900">Diagnosis Results</h3>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500">Detected
+      <div className="border-b border-gray-200 pb-5 mb-5 px-4 sm:px-0">
+        <h3 className="text-2xl font-semibold leading-7 text-gray-900">Duplicated Code Diagnostic Results</h3>
+        <p className="mt-1 text-sm leading-6 text-gray-500">Detected
           <span className="mx-1 font-medium text-gray-900 underline">
             {item.length}
-          </span> instances of duplicate code.</p>
+          </span> instances of duplicate code.
+          <br />
+          If all these duplications are refactored and consolidated, there is potential to reduce the total code by      <span className="mx-1 font-medium text-gray-900 underline">
+            {
+              item.reduce((acc, cur) => acc + cur.potentialRemovals, 0)
+            } lines
+          </span>.
+        </p>
+
       </div>
 
 
@@ -90,18 +88,9 @@ function ListPage({ duplications }: { duplications: Duplication[] }) {
                 </div>
               </div>
               <div className="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
-                <p
-                  className={classNames(
-                    // @ts-ignore
-                    statuses[project.status],
-                    'rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'
-                  )}
-                >
-                  {project.status}
-                </p>
+                <p className="truncate"> Potential Removals: {project.potentialRemovals} lines</p>
                 /
-                <p className="truncate"> {project.createdAt}</p>
-                {/* TODO 削除可能なコードの行数を出す */}
+                <p className="truncate"> Scanned at: {project.createdAt}</p>
               </div>
             </div>
             <div className="flex flex-none items-center gap-x-4">

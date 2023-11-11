@@ -1,7 +1,7 @@
 
 import type { ITokenLocation } from '@jscpd/core';
 
-interface DuplicationContent {
+export interface DuplicationContent {
     start: ITokenLocation;
     end: ITokenLocation;
     path: string;

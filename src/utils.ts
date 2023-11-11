@@ -1,3 +1,5 @@
+import type { DuplicationContent } from './types';
+
 export const uuid = () =>
     'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0;
@@ -5,7 +7,7 @@ export const uuid = () =>
         return v.toString(16);
     });
 
-export function findCommonPrefix(str1: string, str2: string) {
+export const findCommonPrefix = (str1: string, str2: string) => {
     let prefix = "";
     for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
         if (str1[i] === str2[i]) {
@@ -17,3 +19,5 @@ export function findCommonPrefix(str1: string, str2: string) {
 
     return prefix;
 }
+
+export const getPotentialRemovals = (duplicationContent: DuplicationContent) => duplicationContent.end.line - duplicationContent.start.line
