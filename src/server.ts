@@ -122,7 +122,6 @@ const scan = async () => {
 // --------------APIS-----------------------
 
 app.get('/init', async (req, res) => {
-    // FIXME むしろ変更があれば勝手にリフレッシュする
     if (DB.ready) {
         res.json({ ...DB })
         return;

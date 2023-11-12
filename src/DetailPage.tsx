@@ -116,7 +116,6 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
-        // FIXME プロンプトをちゃんと考える
         message: `Please refactor the following duplicate code.
 --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
 ${a.content}
