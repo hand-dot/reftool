@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "bin": {
-    "refactoring2": "./start.sh"
+    "refactoring2": "./start.js"
   },
   "scripts": {
+    "dev": "./dev.sh",
     "start": "./start.sh",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "tsc && vite build"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
@@ -23,6 +23,7 @@
     "highlight.js": "^11.9.0",
     "jscpd": "^3.5.10",
     "monaco-editor": "^0.44.0",
+    "open": "^9.1.0",
     "openai": "^4.17.4",
     "react": "^16.14.0",
     "react-diff-viewer": "^3.1.1",
