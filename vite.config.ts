@@ -22,5 +22,8 @@ export default defineConfig({
   plugins: [
     react(),
     mix({ handler: './src/server.ts' }),
-  ]
+  ],
+  server: {
+    port: 5840
+  }
 })

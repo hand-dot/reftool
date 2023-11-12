@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "refactoring2": "./start.sh"
+  },
   "scripts": {
     "start": "./start.sh",
     "build": "tsc && vite build",

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Start refactoring2"
+
 if [ -z "$1" ]; then
   export VITE_PARAM1=$(realpath .)
 else
