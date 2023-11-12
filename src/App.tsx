@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import ListPage from './ListPage';
 import DetailPage from './DetailPage';
 import type { AppData, Duplication, ClocResult } from './types';
+import { BASEURL } from './constants';
 import { useEffect, useState } from 'react'
 import { Disclosure, } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -28,7 +29,7 @@ function App() {
   const [countLinesOfProjects, setCountLinesOfProjects] = useState<[ClocResult] | [ClocResult, ClocResult]>([{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }])
 
   const analyze = () => {
-    toast.promise(fetch('http://localhost:5173/init')
+    toast.promise(fetch(`${BASEURL}/init`)
       .then((response) => response.json())
       .then(({ duplications, countLinesOfProjects }: AppData) => {
         setDuplications(duplications)
@@ -43,7 +44,7 @@ function App() {
   useEffect(() => {
     analyze()
     const timerId = setInterval(() => {
-      fetch('http://localhost:5173/isFileChanged')
+      fetch(`${BASEURL}/isFileChanged`)
         .then((response) => response.json())
         .then(({ changed }: { changed: boolean }) => {
           if (changed) {

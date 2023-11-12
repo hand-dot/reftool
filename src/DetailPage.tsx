@@ -7,6 +7,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { monaco } from "./editor";
+import { BASEURL } from "./constants";
 import 'highlight.js/styles/github.css'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid'
 
@@ -111,7 +112,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       return;
     }
     setProcessing(true)
-    fetch('http://localhost:5173/gpt', {
+    fetch(`${BASEURL}/gpt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
