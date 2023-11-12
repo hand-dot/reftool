@@ -28,17 +28,19 @@ function App() {
   const [duplications, setDuplications] = useState<Duplication[]>([])
   const [countLinesOfProjects, setCountLinesOfProjects] = useState<[ClocResult] | [ClocResult, ClocResult]>([{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }])
   const [analyzing, setAnalyzing] = useState(false);
+
   const analyze = () => {
     setAnalyzing(true)
     toast.promise(fetch(`${BASEURL}/init`)
       .then((response) => response.json())
-      .then(({ duplications, countLinesOfProjects }: AppData) => {
+      .then(({ time, duplications, countLinesOfProjects }: AppData) => {
         setDuplications(duplications)
         setCountLinesOfProjects(countLinesOfProjects)
         setAnalyzing(false)
+        return time;
       }), {
       loading: 'Analyzing your codebase, please wait...',
-      success: 'Analysis complete.',
+      success: (time) => `'Analysis complete.(${time} ms)'`,
       error: 'An error occurred during analysis.',
     });
   }

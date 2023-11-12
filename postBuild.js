@@ -12,7 +12,6 @@ async function prependToFile(filePath, stringToPrepend) {
         const newData = stringToPrepend + data;
 
         await fs.writeFile(filePath, newData, 'utf8');
-        console.log('File updated successfully');
     } catch (error) {
         console.error('Error occurred:', error);
     }
@@ -25,7 +24,6 @@ async function replaceInFile(filePath, originalString, newString) {
         const newData = data.replace(originalString, newString);
 
         await fs.writeFile(filePath, newData, 'utf8');
-        console.log('File updated successfully');
     } catch (error) {
         console.error('Error occurred:', error);
     }

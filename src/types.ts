@@ -40,6 +40,7 @@ export interface ClocResult {
 }
 
 export interface AppData {
+    time: number,
     ready: boolean,
     countLinesOfProjects: [ClocResult] | [ClocResult, ClocResult],
     duplications: Duplication[]

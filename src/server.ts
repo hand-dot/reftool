@@ -8,9 +8,7 @@ import { commonOptions } from './constants';
 import { readFileSync } from 'fs';
 import { ITokenLocation } from '@jscpd/core';
 import path from 'path';
-import { execa } from 'execa';
 import { exec } from 'child_process';
-import which from 'which';
 import dotenv from 'dotenv';
 import chokidar from 'chokidar';
 import open from 'open';
@@ -31,6 +29,7 @@ const projectPaths: string[] = [
 ];
 
 const DB: AppData = {
+    time: 0,
     ready: false,
     countLinesOfProjects: [{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }],
     duplications: []
@@ -84,7 +83,6 @@ const cloc = async (folder: string): Promise<ClocResult> => {
     return new Promise((resolve) => {
         const clocPath = path.join(__dirname, '..', 'node_modules/.bin/cloc');
         const command = `${clocPath} ${args.join(' ')}`;
-        console.log('command:', command);
         const options = { maxBuffer: 1024 * 1024 * 100 };
         exec(command, options, (error, stdout, stderr) => {
             if (error) {
@@ -121,7 +119,7 @@ const jscpd = async (paths: string[]): Promise<Duplication[]> => {
 }
 
 
-const scan = async () => {
+const analyze = async () => {
     if (projectPaths.length === 0) {
         projectPaths.push(process.cwd());
     }
@@ -131,8 +129,16 @@ const scan = async () => {
         promises.push(cloc(projectPaths[1]))
     }
 
+    console.log('Analyzing...')
+    const start = Date.now();
+    // FIXME ある程度でタイムアウトするようにする
+    // タイムアウトした際にはコマンドラインにtipsを出す(src/ などソースのみを指定するように)
+    // おそらく起動しているディレクトリに解析対象が多ぎるのが問題。
     const [jscpdResult, ...clocResults] = await Promise.all(promises);
-    return { jscpdResult, clocResults };
+    const time = Date.now() - start;
+    console.log('Analysis Completed! - ', time, 'ms')
+
+    return { time, jscpdResult, clocResults };
 }
 
 // --------------APIS-----------------------
@@ -144,8 +150,9 @@ app.get('/init', async (req, res) => {
     }
     DB.ready = true;
 
-    const { jscpdResult, clocResults } = await scan();
+    const { time, jscpdResult, clocResults } = await analyze();
 
+    DB.time = time;
     DB.duplications = jscpdResult;
     DB.countLinesOfProjects = clocResults;
 
@@ -154,12 +161,13 @@ app.get('/init', async (req, res) => {
 
 app.post('/gpt', async (req, res) => {
     const { message } = req.body;
+    // TODO ここから
     const openAi = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await openAi.chat.completions.create({
         model: "gpt-4",
         messages: [{ role: "user", content: message }],
     });
-    // FIXME ストリームにしたい
+    // TODO ストリームにする
     res.json({ message: completion.choices[0].message.content })
 });
 

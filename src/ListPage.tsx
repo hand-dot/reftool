@@ -67,7 +67,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
               <dd className="mt-5 flex">
                 <div className="h-10 flex items-center font-semibold text-gray-700">
                   <span>
-                    <div className='underline text-lg text-center'>code: {item.code}</div>
+                    <div className='underline text-lg'>code: {item.code} lines</div>
                     <span className='text-sm'>(   blank: {item.blank} / comment: {item.comment})</span>
                   </span>
                   <span className="mx-2 text-md font-medium text-gray-700">from </span>
