@@ -27,13 +27,15 @@ function App() {
   const [pages, setPages] = useState<{ name: string; href: string; current: boolean }[]>([])
   const [duplications, setDuplications] = useState<Duplication[]>([])
   const [countLinesOfProjects, setCountLinesOfProjects] = useState<[ClocResult] | [ClocResult, ClocResult]>([{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }])
-
+  const [analyzing, setAnalyzing] = useState(false);
   const analyze = () => {
+    setAnalyzing(true)
     toast.promise(fetch(`${BASEURL}/init`)
       .then((response) => response.json())
       .then(({ duplications, countLinesOfProjects }: AppData) => {
         setDuplications(duplications)
         setCountLinesOfProjects(countLinesOfProjects)
+        setAnalyzing(false)
       }), {
       loading: 'Analyzing your codebase, please wait...',
       success: 'Analysis complete.',
@@ -44,11 +46,13 @@ function App() {
   useEffect(() => {
     analyze()
     const timerId = setInterval(() => {
+      if (analyzing) {
+        return;
+      }
       fetch(`${BASEURL}/isFileChanged`)
         .then((response) => response.json())
         .then(({ changed }: { changed: boolean }) => {
           if (changed) {
-            console.log('changed')
             analyze();
           }
         });

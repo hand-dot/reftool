@@ -6,29 +6,6 @@ import type { Duplication, ClocResult, ClocFileDetails } from './types';
 import { findCommonPrefix, getPotentialRemovals } from './utils'
 import { commonOptions } from './constants';
 
-
-const solutions = [
-  {
-    name: 'Insights',
-    description: 'Measure actions your users take',
-    href: '##',
-  },
-  {
-    name: 'Automations',
-    description: 'Create your own targeted content',
-    href: '##',
-  },
-  {
-    name: 'Reports',
-    description: 'Keep track of your growth',
-    href: '##',
-  },
-]
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ')
-}
-
 function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplication[], countLinesOfProjects: [ClocResult] | [ClocResult, ClocResult] }) {
 
   const item = duplications.map((duplication) => {
@@ -89,7 +66,10 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
               <dt className="text-base font-normal text-gray-900">Project{index + 1}: {item.projectPath}</dt>
               <dd className="mt-5 flex">
                 <div className="h-10 flex items-center font-semibold text-gray-700">
-                  <span className='underline text-xl'>{item.code} lines</span>
+                  <span>
+                    <div className='underline text-lg text-center'>code: {item.code}</div>
+                    <span className='text-sm'>(   blank: {item.blank} / comment: {item.comment})</span>
+                  </span>
                   <span className="mx-2 text-md font-medium text-gray-700">from </span>
                   <span className='underline text-lg'>{item.nFiles} files</span>
                 </div>

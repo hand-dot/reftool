@@ -9,19 +9,26 @@ import { readFileSync } from 'fs';
 import { ITokenLocation } from '@jscpd/core';
 import path from 'path';
 import { execa } from 'execa';
+import { exec } from 'child_process';
 import which from 'which';
 import dotenv from 'dotenv';
 import chokidar from 'chokidar';
+import open from 'open';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ---------------SETUP------------------------
 
 dotenv.config();
-const openAi = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const app = express()
 app.use(express.json());
 
 // --------------SHARED VARIABLE---------------
-const projectPaths: string[] = [import.meta.env.VITE_PARAM1, import.meta.env.VITE_PARAM2];
+const projectPaths: string[] = [
+    import.meta.env.VITE_PARAM1 || process.env.VITE_PARAM1,
+    import.meta.env.VITE_PARAM2 || process.env.VITE_PARAM2
+];
 
 const DB: AppData = {
     ready: false,
@@ -74,17 +81,26 @@ const cloc = async (folder: string): Promise<ClocResult> => {
 
     const args = [excludeDirs, excludeExts, '--by-file', '--json', folder];
 
-    const clocPath = which.sync('cloc');
-    const { stdout, stderr, failed } = await execa(clocPath, args);
+    return new Promise((resolve) => {
+        const clocPath = path.join(__dirname, '..', 'node_modules/.bin/cloc');
+        const command = `${clocPath} ${args.join(' ')}`;
+        console.log('command:', command);
+        const options = { maxBuffer: 1024 * 1024 * 100 };
+        exec(command, options, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`stderr: ${stderr}`);
+                return;
+            }
+            const result = JSON.parse(stdout) as ClocResult
+            result.projectPath = folder;
+            resolve(result);
+        });
+    })
 
-    if (stderr !== '') throw new Error(stderr.trim());
-    if (failed !== false) throw new Error('Failure');
-
-    const result = JSON.parse(stdout) as ClocResult
-
-    result.projectPath = folder;
-
-    return result;
 }
 
 const jscpd = async (paths: string[]): Promise<Duplication[]> => {
@@ -126,18 +142,19 @@ app.get('/init', async (req, res) => {
         res.json({ ...DB })
         return;
     }
+    DB.ready = true;
 
     const { jscpdResult, clocResults } = await scan();
 
     DB.duplications = jscpdResult;
     DB.countLinesOfProjects = clocResults;
-    DB.ready = true;
 
     res.json({ ...DB })
 })
 
 app.post('/gpt', async (req, res) => {
     const { message } = req.body;
+    const openAi = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await openAi.chat.completions.create({
         model: "gpt-4",
         messages: [{ role: "user", content: message }],
@@ -150,12 +167,15 @@ app.get('/isFileChanged', (req, res) => {
     res.json({ changed: !DB.ready })
 });
 
+// --------------START--------------------
 
-// --------------START-----------------------
-
-export const handler = app
+export const handler = app;
 
 onWatchFileChanges(projectPaths, () => {
     DB.ready = false;
 })
 
+
+if (import.meta.env.MODE === 'production') {
+    open(`http://localhost:${process.env.PORT}`)
+}

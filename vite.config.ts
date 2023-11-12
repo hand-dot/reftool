@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import type { Plugin } from 'vite'
 import type { Adapter } from 'vite-plugin-mix'
 import mixPlugin from 'vite-plugin-mix'
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface MixConfig {
   handler: string
