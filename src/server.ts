@@ -2,8 +2,9 @@ import { IClone } from '@jscpd/core';
 import { detectClones } from 'jscpd';
 import OpenAI from 'openai';
 import express from 'express';
-import type { Duplication, ClocResult } from './types';
+import type { AppData, Duplication, ClocResult } from './types';
 import { uuid, getPotentialRemovals } from './utils';
+import { commonOptions } from './constants';
 import { readFileSync } from 'fs';
 import { ITokenLocation } from '@jscpd/core';
 import path from 'path';
@@ -20,15 +21,11 @@ app.use(express.json());
 
 // --------------SHARED VARIABLE---------------
 
-const DB: { countLinesOfProject: ClocResult[], duplications: Duplication[] } = {
-    countLinesOfProject: [],
+const DB: AppData = {
+    ready: false,
+    countLinesOfProjects: [{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }],
     duplications: []
 }
-
-const commonOptions = {
-    excludeDirs: ['node_modules', 'dist', 'build', 'coverage', '__snapshots__', '__fixtures__'],
-    excludeExts: ['json', 'md', 'yml', 'yaml', 'lock', 'log', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'ttf', 'woff', 'woff2', 'eot', 'map'],
-};
 
 // --------------FUNCTIONS---------------------
 
@@ -52,7 +49,11 @@ const cloc = async (folder: string): Promise<ClocResult> => {
     if (stderr !== '') throw new Error(stderr.trim());
     if (failed !== false) throw new Error('Failure');
 
-    return JSON.parse(stdout) as ClocResult;
+    const result = JSON.parse(stdout) as ClocResult
+
+    result.projectPath = folder;
+
+    return result;
 }
 
 const jscpd = async (path: string[]): Promise<Duplication[]> => {
@@ -61,7 +62,7 @@ const jscpd = async (path: string[]): Promise<Duplication[]> => {
         ...commonOptions.excludeExts.map(ext => `**/*.${ext}`)
     ];
 
-    const clones = await detectClones({ path: path.filter(Boolean), minLines: 10, minTokens: 75, silent: true, gitignore: true, ignore, });
+    const clones = await detectClones({ path: path.filter(Boolean), silent: true, gitignore: true, ignore, });
 
     return clones.map((clone: IClone) => ({
         id: uuid(),
@@ -71,18 +72,12 @@ const jscpd = async (path: string[]): Promise<Duplication[]> => {
         duplicationB: extractDuplicationDetails(clone.duplicationB)
     })).sort((a, b) => getPotentialRemovals(b.duplicationA) - getPotentialRemovals(a.duplicationA));
 }
-// --------------APIS-----------------------
 
-app.get('/init', async (req, res) => {
+
+const scan = async () => {
     const projectPaths: string[] = [import.meta.env.VITE_PARAM1, import.meta.env.VITE_PARAM2];
     if (projectPaths.length === 0) {
         projectPaths.push(process.cwd());
-    }
-
-    // FIXME 必要に応じてリフレッシュできるようにする いや、むしろ変更があれば勝手にリフレッシュするべき
-    if (DB.duplications.length > 0 || DB.countLinesOfProject.length > 0) {
-        res.json({ ...DB })
-        return;
     }
 
     const promises: [Promise<Duplication[]>, Promise<ClocResult>] = [jscpd(projectPaths), cloc(projectPaths[0])]
@@ -91,9 +86,23 @@ app.get('/init', async (req, res) => {
     }
 
     const [jscpdResult, ...clocResults] = await Promise.all(promises);
+    return { jscpdResult, clocResults };
+}
+
+// --------------APIS-----------------------
+
+app.get('/init', async (req, res) => {
+    // FIXME むしろ変更があれば勝手にリフレッシュする
+    if (DB.ready) {
+        res.json({ ...DB })
+        return;
+    }
+
+    const { jscpdResult, clocResults } = await scan();
 
     DB.duplications = jscpdResult;
-    DB.countLinesOfProject = clocResults;
+    DB.countLinesOfProjects = clocResults;
+    DB.ready = true;
 
     res.json({ ...DB })
 })

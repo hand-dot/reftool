@@ -14,11 +14,6 @@ function getFileName(path: string) {
   return path.split('/').pop();
 }
 
-function calculatePercentage(part: number, total: number) {
-  return (part / total * 100).toFixed(2) + '%';
-}
-
-
 function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
 
   const editorElemA = useRef<HTMLDivElement>(null)
@@ -121,7 +116,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
         // FIXME プロンプトをちゃんと考える
-        message: `Please refactor the following duplicate code. レスポンスは日本語にして。
+        message: `Please refactor the following duplicate code.
 --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
 ${a.content}
 --${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
@@ -142,15 +137,9 @@ ${b.content}
   const aHref = `vscode://file${a.path}:${a.start.line}`
   const bHref = `vscode://file${b.path}:${b.start.line}`
 
-  const aContentRow = a.content.split('\n').length
-  const bContentRow = b.content.split('\n').length
-
-  const aFragmentRow = a.end.line - a.start.line
-  const bFragmentRow = b.end.line - b.start.line
-
   const stats = [
-    { id: 'a', ref: editorElemA, href: aHref, fileName: getFileName(a.path), path: aPath, stat: calculatePercentage(aFragmentRow, aContentRow) },
-    { id: 'b', ref: editorElemB, href: bHref, fileName: getFileName(b.path), path: bPath, stat: calculatePercentage(bFragmentRow, bContentRow) },
+    { id: 'a', ref: editorElemA, href: aHref, fileName: getFileName(a.path), path: aPath },
+    { id: 'b', ref: editorElemB, href: bHref, fileName: getFileName(b.path), path: bPath },
   ]
 
   return (
@@ -173,12 +162,11 @@ ${b.content}
 
         <dl className="my-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white md:grid-cols-2 md:divide-x md:divide-y-0">
           {stats.map((item) => (
-            <div key={item.id} className={item.id === 'a' ? '' : "pl-4"}>
-              <dt className="text-base font-normal text-gray-900">{item.fileName}</dt>
+            <div key={item.id} className={item.id === 'a' ? '' : "pl-8"}>
               <span className="text-xs font-medium text-gray-500 break-words">{item.path}</span>
               <dd className="mt-1 mb-5 flex items-baseline justify-between md:block lg:flex">
-                <div className="flex items-baseline text-xl font-semibold text-blue-600">
-                  Duplicate code ratio in file: {item.stat}
+                <div className="flex items-baseline text-xl font-semibold">
+                  {item.fileName}
                 </div>
                 <div
                   className={'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0'}

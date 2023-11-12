@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ListPage from './ListPage';
 import DetailPage from './DetailPage';
-import type { Duplication } from './types';
+import type { AppData, Duplication, ClocResult } from './types';
 import { useEffect, useState } from 'react'
 import { Disclosure, } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -23,14 +23,16 @@ function App() {
   const [_, currentPathId] = currentPath.split('/');
 
   const [pages, setPages] = useState<{ name: string; href: string; current: boolean }[]>([])
-
   const [duplications, setDuplications] = useState<Duplication[]>([])
+  const [countLinesOfProjects, setCountLinesOfProjects] = useState<[ClocResult] | [ClocResult, ClocResult]>([{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }])
+
 
   useEffect(() => {
     fetch('http://localhost:5173/init')
       .then((response) => response.json())
-      .then(({ duplications }) => {
+      .then(({ duplications, countLinesOfProjects }: AppData) => {
         setDuplications(duplications)
+        setCountLinesOfProjects(countLinesOfProjects)
       });
   }, [])
 
@@ -153,8 +155,11 @@ function App() {
       </nav>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-5">
         <Routes>
-          <Route path="/" element={<ListPage duplications={duplications} />} />
-          <Route path="/:id" element={<DetailPage duplication={duplications.find((duplication) => duplication.id === currentPathId)} />} />
+          <Route path="/" element={<ListPage duplications={duplications} countLinesOfProjects={countLinesOfProjects} />} />
+          <Route path="/:id" element={
+            <DetailPage
+              duplication={duplications.find((duplication) => duplication.id === currentPathId)}
+            />} />
         </Routes>
       </div>
     </div>

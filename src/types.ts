@@ -18,22 +18,13 @@ export interface Duplication {
 }
 
 
-interface ClocFileDetails {
+export interface ClocFileDetails {
     blank: number;
     comment: number;
     code: number;
     language: string;
 }
 
-interface ClocHeader {
-    cloc_url: string;
-    cloc_version: string;
-    elapsed_seconds: number;
-    n_files: number;
-    n_lines: number;
-    files_per_second: number;
-    lines_per_second: number;
-}
 
 interface ClocSummary {
     blank: number;
@@ -43,7 +34,13 @@ interface ClocSummary {
 }
 
 export interface ClocResult {
-    header: ClocHeader;
+    projectPath: string;
     SUM: ClocSummary;
-    [filePath: string]: ClocFileDetails | ClocHeader | ClocSummary;
+    [filePath: string]: string | ClocFileDetails | ClocSummary;
+}
+
+export interface AppData {
+    ready: boolean,
+    countLinesOfProjects: [ClocResult] | [ClocResult, ClocResult],
+    duplications: Duplication[]
 }
