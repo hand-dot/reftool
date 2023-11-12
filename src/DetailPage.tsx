@@ -166,7 +166,7 @@ ${b.content}
               <span className="text-xs font-medium text-gray-500 break-words">{item.path}</span>
               <dd className="mt-1 mb-5 flex items-baseline justify-between md:block lg:flex">
                 <div className="flex items-baseline text-xl font-semibold">
-                  {item.fileName}
+                  📄 {item.fileName}
                 </div>
                 <div
                   className={'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0'}
@@ -218,7 +218,7 @@ ${b.content}
       </div>
 
       {/* Back to home */}
-      <div className="relative my-12">
+      <div className="relative my-24">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-300" />
         </div>

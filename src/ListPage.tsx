@@ -63,7 +63,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
         <dl className={`grid grid-cols-2 gap-4 mt-5 divide-x divide-gray-200 overflow-hidden rounded-lg bg-white`}>
           {_countLinesOfProjects.map((item, index) => (
             <div key={item.projectPath} className={`px-4 py-5 pl-${index}`}>
-              <dt className="text-base font-normal text-gray-900">Project{index + 1}: {item.projectPath}</dt>
+              <dt className="text-lg font-normal text-gray-900">📁 {item.projectPath}</dt>
               <dd className="mt-5 flex">
                 <div className="h-10 flex items-center font-semibold text-gray-700">
                   <span>
@@ -168,44 +168,41 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
         {item.map((project, index) => (
           <li key={project.id} className="flex items-center justify-between gap-x-6 py-5">
             <div className="min-w-0">
-              <Link to={String(project.id)} className="hover:underline flex items-baseline">
+              <div className='flex items-baseline'>
                 <h2 className="text-md font-medium text-gray-500">
-                  {index + 1}: 💥 Duplication Found!
+                  {index + 1}: <span className='text-lg'>💥</span> Duplication Found!
                 </h2>
-                <span className="ml-2 text-sm text-gray-900 font-medium truncate">
-                  {project.id}
-                </span>
+                <span className='mx-2'>-</span>
+                <div className="mt-1 flex items-center gap-x-2 text-sm leading-5 text-gray-500">
+                  <p className="truncate font-bold"> Potential Removals: <span className='text-red-500'>{project.potentialRemovals}lines</span></p>
+                  /
+                  <p className="truncate"> Scanned at: {project.createdAt}</p>
+                </div>
                 {project.duplicationATitle === project.duplicationBTitle &&
                   <p
                     className={'ml-2 text-pink-700 bg-pink-50 ring-pink-600/20 rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'}>
                     same file
                   </p>}
-
                 <p
                   className={'ml-2 text-gray-700 bg-gray-50 ring-gray-600/20 rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset'}
                 >
                   {project.format}
                 </p>
-              </Link>
+              </div>
               <div className="flex items-start gap-x-3">
                 <div className='flex flex-col'>
                   {project.duplicationATitle === project.duplicationBTitle ? (
                     <>
-                      <p className="text-sm font-semibold leading-6 text-gray-900">A & B: {project.duplicationATitle}</p>
+                      <p className="text-md font-semibold leading-6 text-gray-900">📄 {project.duplicationATitle}</p>
                     </>) : (
-                    <>
-                      <p className="text-sm font-semibold leading-6 text-gray-900">A: {project.duplicationATitle} - B: {project.duplicationBTitle}</p>
-                      <div className="flex items-center gap-x-2 text-xs leading-5 text-gray-500">
+                    <Link to={String(project.id)} className="hover:underline">
+                      <p className="text-lg font-semibold leading-6 text-gray-900">📄 {project.duplicationATitle} - 📄 {project.duplicationBTitle}</p>
+                      <div className="flex items-center gap-x-2 text-sm leading-5 text-gray-500">
                         <p className="truncate"> {project.path}</p>
                       </div>
-                    </>)}
-
+                    </Link>
+                  )}
                 </div>
-              </div>
-              <div className="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
-                <p className="truncate"> Potential Removals: <span className='text-red-500'>{project.potentialRemovals}lines</span></p>
-                /
-                <p className="truncate"> Scanned at: {project.createdAt}</p>
               </div>
             </div>
             <div className="flex flex-none items-center gap-x-4">

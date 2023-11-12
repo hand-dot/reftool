@@ -1,10 +1,10 @@
 {
-  "name": "my-refactoring-tool",
+  "name": "refactool",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "bin": {
-    "refactoring2": "./start.js"
+    "refactool": "./start.js"
   },
   "scripts": {
     "dev": "./dev.sh",

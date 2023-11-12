@@ -145,6 +145,7 @@ const analyze = async () => {
 
 app.get('/init', async (req, res) => {
     if (DB.ready) {
+        DB.time = 'cache'
         res.json({ ...DB })
         return;
     }

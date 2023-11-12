@@ -22,7 +22,7 @@ const server = spawn('node', [path.join(__dirname, 'build', 'server.js')], { env
 
 server.stdout.on('data', (data) => {
     console.log(data.toString());
-    if (data.toString() === `Ready at http://localhost:${PORT}`) {
+    if (data.toString().startsWith('Ready at ')) {
         open(`http://localhost:${PORT}`)
     }
     console.log(`stdout: ${data}`);
