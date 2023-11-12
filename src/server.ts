@@ -11,6 +11,7 @@ import path from 'path';
 import { execa } from 'execa';
 import which from 'which';
 import dotenv from 'dotenv';
+import chokidar from 'chokidar';
 
 // ---------------SETUP------------------------
 
@@ -28,6 +29,35 @@ const DB: AppData = {
 }
 
 // --------------FUNCTIONS---------------------
+
+const onWatchFileChanges = (cb: (path: string) => void) => {
+    const isExcluded = (path: string) => {
+        const ext = path.split('.').pop()!;
+        const base = path.split('/').pop()!;
+        return commonOptions.excludeDirs.includes(base) || commonOptions.excludeExts.includes(ext);
+    }
+    const dirPath = '/path/to/your/directory';
+    const watcher = chokidar.watch(dirPath, {
+        ignored: (path) => isExcluded(path),
+        persistent: true
+    });
+
+    watcher
+        .on('add', path => {
+            console.log(`File ${path} has been added`)
+            cb(path);
+        })
+        .on('change', path => {
+            console.log(`File ${path} has been changed`)
+            cb(path);
+        })
+        .on('unlink', path => {
+            console.log(`File ${path} has been removed`)
+            cb(path);
+        });
+}
+
+
 
 const extractDuplicationDetails = (duplication: { start: ITokenLocation, end: ITokenLocation, sourceId: string, fragment?: string, }) => ({
     start: duplication.start,
@@ -117,7 +147,16 @@ app.post('/gpt', async (req, res) => {
     res.json({ message: completion.choices[0].message.content })
 });
 
+app.get('/isFileChanged', (req, res) => {
+    res.json({ changed: !DB.ready })
+});
+
 
 // --------------START-----------------------
 
 export const handler = app
+
+onWatchFileChanges(() => {
+    DB.ready = false;
+})
+

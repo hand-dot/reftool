@@ -27,13 +27,32 @@ function App() {
   const [countLinesOfProjects, setCountLinesOfProjects] = useState<[ClocResult] | [ClocResult, ClocResult]>([{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }])
 
 
-  useEffect(() => {
+  const init = () => {
     fetch('http://localhost:5173/init')
       .then((response) => response.json())
       .then(({ duplications, countLinesOfProjects }: AppData) => {
         setDuplications(duplications)
         setCountLinesOfProjects(countLinesOfProjects)
       });
+  }
+
+  useEffect(() => {
+    init()
+    const timerId = setInterval(() => {
+      fetch('http://localhost:5173/isFileChanged')
+        .then((response) => response.json())
+        .then(({ changed }: { changed: boolean }) => {
+          if (changed) {
+            console.log('changed')
+            init();
+          }
+        });
+
+    }, 1000)
+
+    return () => {
+      clearInterval(timerId)
+    }
   }, [])
 
 

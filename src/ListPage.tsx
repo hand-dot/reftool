@@ -93,16 +93,16 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
                   <span className="mx-2 text-md font-medium text-gray-700">from </span>
                   <span className='underline text-lg'>{item.nFiles} files</span>
                 </div>
-                <div>
-                  <Popover className={'px-4 absolute'}>
+                <div className='h-10'>
+                  <Popover className={'mt-2 px-4 absolute'}>
                     {({ open }) => (
                       <>
                         <Popover.Button
                           className={`
                 ${open ? 'text-white' : 'text-white/90'}
-                group inline-flex items-center rounded-md bg-gray-700 px-3 py-2 text-base font-medium hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75`}
+                group inline-flex items-center rounded-md bg-gray-700 px-2 py-1 text-sm hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75`}
                         >
-                          <span>Top 10 files by line count</span>
+                          <span>Top 10 files by code count</span>
                           <ChevronDownIcon
                             className={`${open ? 'text-gray-300' : 'text-gray-300/70'}
                   ml-2 h-5 w-5 transition duration-150 ease-in-out group-hover:text-gray-300/80`}
@@ -156,7 +156,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
 
       <div>
         <h2 className="mb-2 text-md text-gray-500">Setting:</h2>
-        <ul className="space-y-1 text-gray-500 list-disc list-inside">
+        <ul className="space-y-1 text-sm text-gray-500 list-disc list-inside">
           <li>
             ExcludeDirs: {commonOptions.excludeDirs.join(', ')}
           </li>
