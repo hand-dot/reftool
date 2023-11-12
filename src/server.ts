@@ -1,5 +1,4 @@
 import { readFileSync } from 'fs';
-import * as path from 'path';
 import { IClone, ITokenLocation } from '@jscpd/core';
 import { detectClones } from 'jscpd';
 import OpenAI from 'openai';
@@ -7,8 +6,30 @@ import express from 'express';
 import type { Duplication } from './types';
 import { uuid, getPotentialRemovals } from './utils';
 import dotenv from 'dotenv';
+import { execa } from 'execa';
+import which from 'which';
+import path from 'path';
+
 
 dotenv.config();
+
+const cloc = async (folder: string) => {
+    const args = [
+        '--exclude-dir=node_modules,dist,build,coverage,__snapshots__,__fixtures__',
+        '--exclude-ext=json,md,yml,yaml,lock,log,txt,png,jpg,jpeg,gif,svg,ico,ttf,woff,woff2,eot,map',
+        '--by-file',
+        '--json',
+        folder
+      ];
+      const clocPath = which.sync('cloc');
+
+      const { stdout, stderr, failed } = await execa(clocPath, args);
+
+    if (stderr !== '') throw new Error(stderr.trim())
+    if (failed !== false) throw new Error('Failure')
+
+    return JSON.parse(stdout)
+}
 
 const projects: string[] = [import.meta.env.VITE_PARAM1, import.meta.env.VITE_PARAM2].filter(Boolean) as string[];
 
@@ -34,7 +55,7 @@ const extractDuplicationDetails = (duplication: {
 const app = express()
 app.use(express.json());
 
-app.get('/duplications', async (req, res) => {
+app.get('/init', async (req, res) => {
     // FIXME 必要に応じてリフレッシュできるようにする いや、むしろ変更があれば勝手にリフレッシュするべき
     if (DB.duplications.length > 0) {
         res.json({ duplications: DB.duplications })
@@ -84,6 +105,13 @@ app.get('/duplications', async (req, res) => {
     })).sort((a, b) => getPotentialRemovals(b.duplicationA) - getPotentialRemovals(a.duplicationA));
 
     DB.duplications = duplications;
+
+    // TODO ここから cloc　を使ってソースの全体の行数を取得する
+    const result = await cloc(projects[0])
+    console.log(result)
+    // ソースコードの総量、大きいファイルTOP10を返す
+
+    // duplicationsはTOP10のみにしてもいいかも
 
     res.json({ duplications })
 })

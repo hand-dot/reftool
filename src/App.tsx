@@ -27,7 +27,7 @@ function App() {
   const [duplications, setDuplications] = useState<Duplication[]>([])
 
   useEffect(() => {
-    fetch('http://localhost:5173/duplications')
+    fetch('http://localhost:5173/init')
       .then((response) => response.json())
       .then(({ duplications }) => {
         setDuplications(duplications)
