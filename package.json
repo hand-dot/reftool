@@ -24,6 +24,7 @@
     "react": "^16.14.0",
     "react-diff-viewer": "^3.1.1",
     "react-dom": "^16.14.0",
+    "react-hot-toast": "^2.4.1",
     "react-markdown": "^8.0.7",
     "react-router-dom": "^6.18.0",
     "rehype-highlight": "^6.0.0",

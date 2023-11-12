@@ -21,6 +21,7 @@ const app = express()
 app.use(express.json());
 
 // --------------SHARED VARIABLE---------------
+const projectPaths: string[] = [import.meta.env.VITE_PARAM1, import.meta.env.VITE_PARAM2];
 
 const DB: AppData = {
     ready: false,
@@ -30,16 +31,16 @@ const DB: AppData = {
 
 // --------------FUNCTIONS---------------------
 
-const onWatchFileChanges = (cb: (path: string) => void) => {
+const onWatchFileChanges = (paths: string[], cb: (path: string) => void) => {
     const isExcluded = (path: string) => {
         const ext = path.split('.').pop()!;
         const base = path.split('/').pop()!;
-        return commonOptions.excludeDirs.includes(base) || commonOptions.excludeExts.includes(ext);
+        return !ext || !base || commonOptions.excludeDirs.includes(base) || commonOptions.excludeExts.includes(ext);
     }
-    const dirPath = '/path/to/your/directory';
-    const watcher = chokidar.watch(dirPath, {
+    const watcher = chokidar.watch(paths.filter(Boolean), {
         ignored: (path) => isExcluded(path),
-        persistent: true
+        persistent: true,
+        ignoreInitial: true
     });
 
     watcher
@@ -86,13 +87,13 @@ const cloc = async (folder: string): Promise<ClocResult> => {
     return result;
 }
 
-const jscpd = async (path: string[]): Promise<Duplication[]> => {
+const jscpd = async (paths: string[]): Promise<Duplication[]> => {
     const ignore = [
         ...commonOptions.excludeDirs.map(dir => `**/${dir}/**`),
         ...commonOptions.excludeExts.map(ext => `**/*.${ext}`)
     ];
 
-    const clones = await detectClones({ path: path.filter(Boolean), silent: true, gitignore: true, ignore, });
+    const clones = await detectClones({ path: paths.filter(Boolean), silent: true, gitignore: true, ignore, });
 
     return clones.map((clone: IClone) => ({
         id: uuid(),
@@ -105,7 +106,6 @@ const jscpd = async (path: string[]): Promise<Duplication[]> => {
 
 
 const scan = async () => {
-    const projectPaths: string[] = [import.meta.env.VITE_PARAM1, import.meta.env.VITE_PARAM2];
     if (projectPaths.length === 0) {
         projectPaths.push(process.cwd());
     }
@@ -156,7 +156,7 @@ app.get('/isFileChanged', (req, res) => {
 
 export const handler = app
 
-onWatchFileChanges(() => {
+onWatchFileChanges(projectPaths, () => {
     DB.ready = false;
 })
 

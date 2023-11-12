@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { Disclosure, } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { HomeIcon } from '@heroicons/react/20/solid'
+import toast, { Toaster } from 'react-hot-toast';
 
 const navigation: { name: string; href: string; current: boolean }[] = [
   { name: 'GitHub', href: 'https://github.com/hand-dot/my-refactoring-tool', current: false },
@@ -26,25 +27,28 @@ function App() {
   const [duplications, setDuplications] = useState<Duplication[]>([])
   const [countLinesOfProjects, setCountLinesOfProjects] = useState<[ClocResult] | [ClocResult, ClocResult]>([{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }])
 
-
-  const init = () => {
-    fetch('http://localhost:5173/init')
+  const analyze = () => {
+    toast.promise(fetch('http://localhost:5173/init')
       .then((response) => response.json())
       .then(({ duplications, countLinesOfProjects }: AppData) => {
         setDuplications(duplications)
         setCountLinesOfProjects(countLinesOfProjects)
-      });
+      }), {
+      loading: 'Analyzing your codebase, please wait...',
+      success: 'Analysis complete.',
+      error: 'An error occurred during analysis.',
+    });
   }
 
   useEffect(() => {
-    init()
+    analyze()
     const timerId = setInterval(() => {
       fetch('http://localhost:5173/isFileChanged')
         .then((response) => response.json())
         .then(({ changed }: { changed: boolean }) => {
           if (changed) {
             console.log('changed')
-            init();
+            analyze();
           }
         });
 
@@ -73,6 +77,10 @@ function App() {
 
   return (
     <div>
+      <Toaster
+        position="bottom-right"
+        reverseOrder={false}
+      />
       <Disclosure as="nav" className="bg-gray-800">
         {({ open }) => (
           <>
