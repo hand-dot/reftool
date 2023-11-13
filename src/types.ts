@@ -44,4 +44,8 @@ export interface AppData {
     ready: boolean,
     countLinesOfProjects: [ClocResult] | [ClocResult, ClocResult],
     duplications: Duplication[]
+    options: {
+        excludeDirs: string[],
+        excludeExts: string[],
+    }
 }

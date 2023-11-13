@@ -32,21 +32,30 @@ function App() {
   const analyze = () => {
     setAnalyzing(true)
     toast.promise(fetch(`${BASEURL}/init`)
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (response.status !== 200) {
+          throw new Error((await response.json()).message)
+        }
+        return response.json()
+      })
       .then(({ time, duplications, countLinesOfProjects }: AppData) => {
+        console.log(1)
         setDuplications(duplications)
         setCountLinesOfProjects(countLinesOfProjects)
         setAnalyzing(false)
         return time;
-      }), {
-      loading: 'Analyzing your codebase, please wait...',
-      success: (time) => `'Analysis complete.(${isNaN(Number(time)) ? time : time + ' ms'})'`,
-      error: 'An error occurred during analysis.',
-    });
+      }).catch((e) => {
+        setAnalyzing(false)
+        throw e;
+      }),
+      {
+        loading: 'Analyzing your codebase, please wait...',
+        success: (time) => `'Analysis complete.(${isNaN(Number(time)) ? time : time + ' ms'})'`,
+        error: (e) => e.message,
+      });
   }
 
   useEffect(() => {
-    analyze()
     const timerId = setInterval(() => {
       if (analyzing) {
         return;

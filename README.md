@@ -80,12 +80,12 @@ RefTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd](
   - [x] How it works、How to use の説明を README に書く
   - [x] beta リリース
   - [ ] カスタマイズ
-    - [ ] jscpd のオプションをカスタマイズできるよにする
+    - [x] jscpd のオプションをカスタマイズできるよにする
     - [ ] ChatGPT のプロンプトをカスタマイズできるようにする
   - [ ] ts-prune を使う
   - Duplicated Code の readmore
   - cloc をスナップショットを撮れるようにする？
     - https://tailwindui.com/components/application-ui/data-display/stats#component-72704cac437a06d94cdb941c274591ba
     - 過去と比較してどのくらい減ったか表示したい
-  - [ ] FIXME を直す
+  - [x] FIXME を直す
 </details>

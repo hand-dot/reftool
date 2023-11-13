@@ -13,6 +13,9 @@ import dotenv from 'dotenv';
 import chokidar from 'chokidar';
 import open from 'open';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,6 +24,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const app = express()
 app.use(express.json());
+app.use(cors({ origin: ['http://127.0.0.1:5840'] }));
 
 // --------------SHARED VARIABLE---------------
 const projectPaths: string[] = [
@@ -32,7 +36,11 @@ const DB: AppData = {
     time: 0,
     ready: false,
     countLinesOfProjects: [{ projectPath: "", SUM: { blank: 0, comment: 0, code: 0, nFiles: 0, } }],
-    duplications: []
+    duplications: [],
+    options: {
+        excludeDirs: commonOptions.excludeDirs,
+        excludeExts: commonOptions.excludeExts,
+    }
 }
 
 // --------------FUNCTIONS---------------------
@@ -41,7 +49,7 @@ const onWatchFileChanges = (paths: string[], cb: (path: string) => void) => {
     const isExcluded = (path: string) => {
         const ext = path.split('.').pop()!;
         const base = path.split('/').pop()!;
-        return !ext || !base || commonOptions.excludeDirs.includes(base) || commonOptions.excludeExts.includes(ext);
+        return !ext || !base || DB.options.excludeDirs.includes(base) || DB.options.excludeExts.includes(ext);
     }
     const watcher = chokidar.watch(paths.filter(Boolean), {
         ignored: (path) => isExcluded(path),
@@ -75,22 +83,24 @@ const extractDuplicationDetails = (duplication: { start: ITokenLocation, end: IT
 })
 
 const cloc = async (folder: string): Promise<ClocResult> => {
-    const excludeDirs = `--exclude-dir=${commonOptions.excludeDirs.join(',')}`;
-    const excludeExts = `--exclude-ext=${commonOptions.excludeExts.join(',')}`;
+    const excludeDirs = `--exclude-dir=${DB.options.excludeDirs.join(',')}`;
+    const excludeExts = `--exclude-ext=${DB.options.excludeExts.join(',')}`;
 
     const args = [excludeDirs, excludeExts, '--by-file', '--json', folder];
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const clocPath = path.join(__dirname, '..', 'cloc');
         const command = `${clocPath} ${args.join(' ')}`;
         const options = { maxBuffer: 1024 * 1024 * 100 };
         exec(command, options, (error, stdout, stderr) => {
             if (error) {
                 console.error(`error: ${error.message}`);
+                reject('-------cloc error------');
                 return;
             }
             if (stderr) {
                 console.error(`stderr: ${stderr}`);
+                reject('-------cloc error------');
                 return;
             }
             const result = JSON.parse(stdout) as ClocResult
@@ -103,19 +113,24 @@ const cloc = async (folder: string): Promise<ClocResult> => {
 
 const jscpd = async (paths: string[]): Promise<Duplication[]> => {
     const ignore = [
-        ...commonOptions.excludeDirs.map(dir => `**/${dir}/**`),
-        ...commonOptions.excludeExts.map(ext => `**/*.${ext}`)
+        ...DB.options.excludeDirs.map(dir => `**/${dir}/**`),
+        ...DB.options.excludeExts.map(ext => `**/*.${ext}`)
     ];
 
-    const clones = await detectClones({ path: paths.filter(Boolean), silent: true, gitignore: true, ignore, });
-
-    return clones.map((clone: IClone) => ({
-        id: uuid(),
-        format: clone.format,
-        foundDate: clone.foundDate || 0,
-        duplicationA: extractDuplicationDetails(clone.duplicationA),
-        duplicationB: extractDuplicationDetails(clone.duplicationB)
-    })).sort((a, b) => getPotentialRemovals(b.duplicationA) - getPotentialRemovals(a.duplicationA));
+    try {
+        const clones = await detectClones({ path: paths.filter(Boolean), silent: true, gitignore: true, ignore, });
+        return clones.map((clone: IClone) => ({
+            id: uuid(),
+            format: clone.format,
+            foundDate: clone.foundDate || 0,
+            duplicationA: extractDuplicationDetails(clone.duplicationA),
+            duplicationB: extractDuplicationDetails(clone.duplicationB)
+        })).sort((a, b) => getPotentialRemovals(b.duplicationA) - getPotentialRemovals(a.duplicationA));
+    }
+    catch (e) {
+        console.error(e);
+        throw new Error('-------jscpd error-------');
+    }
 }
 
 
@@ -129,16 +144,18 @@ const analyze = async () => {
         promises.push(cloc(projectPaths[1]))
     }
 
-    console.log('Analyzing...')
-    const start = Date.now();
-    // FIXME ある程度でタイムアウトするようにする
-    // タイムアウトした際にはコマンドラインにtipsを出す(src/ などソースのみを指定するように)
-    // おそらく起動しているディレクトリに解析対象が多ぎるのが問題。
-    const [jscpdResult, ...clocResults] = await Promise.all(promises);
-    const time = Date.now() - start;
-    console.log('Analysis Completed! - ', time, 'ms')
+    try {
+        console.log('Analyzing...')
+        const start = Date.now();
+        const [jscpdResult, ...clocResults] = await Promise.all(promises);
+        const time = Date.now() - start;
+        console.log('Analysis Completed! - ', time, 'ms')
 
-    return { time, jscpdResult, clocResults };
+        return { time, jscpdResult, clocResults };
+    } catch (e) {
+        console.error(e);
+        throw new Error('Error while analyzing. Check terminal console for more details and settings');
+    }
 }
 
 async function* streamChatCompletion(params: { apiKey: string, message: string }) {
@@ -163,23 +180,39 @@ async function* streamChatCompletion(params: { apiKey: string, message: string }
     }
 }
 
+function timeoutPromise(ms: number) {
+    return new Promise((_, reject) => {
+        setTimeout(() => {
+            reject(new Error(`Timeout after ${ms} ms. Check your codebase path and settings`));
+        }, ms);
+    });
+}
+
+
 // --------------APIS-----------------------
 
-app.get('/init', async (req, res) => {
+app.get('/init', async (_, res) => {
     if (DB.ready) {
         DB.time = 'cache'
         res.json({ ...DB })
         return;
     }
-    DB.ready = true;
 
-    const { time, jscpdResult, clocResults } = await analyze();
+    try {
+        DB.ready = true;
 
-    DB.time = time;
-    DB.duplications = jscpdResult;
-    DB.countLinesOfProjects = clocResults;
+        const result = await Promise.race<any>([analyze(), timeoutPromise(10000)]);
+        const { time, jscpdResult, clocResults } = result as { time: number, jscpdResult: Duplication[], clocResults: [ClocResult] | [ClocResult, ClocResult] };
 
-    res.json({ ...DB })
+        DB.time = time;
+        DB.duplications = jscpdResult;
+        DB.countLinesOfProjects = clocResults;
+
+        res.json({ ...DB })
+    } catch (e: any) {
+        console.error(e);
+        res.status(500).json({ message: "Internal server error \n" + e.message });
+    }
 })
 
 app.post('/gpt', async (req, res) => {
@@ -204,8 +237,23 @@ app.post('/gpt', async (req, res) => {
     res.end();
 });
 
-app.get('/isFileChanged', (req, res) => {
+app.get('/isFileChanged', (_, res) => {
     res.json({ changed: !DB.ready })
+});
+
+app.put('/options', (req, res) => {
+    const { excludeDirs, excludeExts } = req.body;
+
+    if (!excludeDirs || !excludeExts) {
+        res.status(400).json({ message: 'ng' })
+        return;
+    }
+
+    DB.options.excludeDirs = excludeDirs.length === 0 ? commonOptions.excludeDirs : excludeDirs as string[];
+    DB.options.excludeExts = excludeExts.length === 0 ? commonOptions.excludeExts : excludeExts as string[];
+    DB.ready = false;
+
+    res.status(200).json({ message: 'ok' })
 });
 
 // --------------START--------------------

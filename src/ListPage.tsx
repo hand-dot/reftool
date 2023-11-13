@@ -1,14 +1,51 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { Fragment } from 'react'
 import type { Duplication, ClocResult, ClocFileDetails } from './types';
 import { findCommonPrefix, getPotentialRemovals } from './utils'
-import { commonOptions } from './constants';
+import { commonOptions, BASEURL } from './constants';
 
 const RANK_NUM = 20;
 
 function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplication[], countLinesOfProjects: [ClocResult] | [ClocResult, ClocResult] }) {
+
+  const [excludeDirs, setExcludeDirs] = useState('');
+  const [excludeExts, setExcludeExts] = useState('');
+
+  useEffect(() => {
+    const excludeDirs = localStorage.getItem('excludeDirs');
+    const excludeExts = localStorage.getItem('excludeExts');
+    if (excludeDirs) {
+      setExcludeDirs(excludeDirs);
+    } else {
+      setExcludeDirs(commonOptions.excludeDirs.join(', '));
+    }
+    if (excludeExts) {
+      setExcludeExts(excludeExts);
+    } else {
+      setExcludeExts(commonOptions.excludeExts.join(', '));
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('excludeDirs', excludeDirs);
+    localStorage.setItem('excludeExts', excludeExts);
+
+    const options = {
+      excludeDirs: excludeDirs.split(',').map((v) => v.trim()),
+      excludeExts: excludeExts.split(',').map((v) => v.trim()),
+    }
+
+    fetch(`${BASEURL}/options`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...options }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+
+  }, [excludeDirs, excludeExts])
 
   const item = duplications.map((duplication) => {
     const date = new Date(duplication.foundDate);
@@ -136,15 +173,42 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
         </dl>
       </div>
 
-      <div>
+      <div className='my-4'>
         <h2 className="mb-2 text-md text-gray-500">Setting(Will be customizable in the future):</h2>
-        {/* TODO ここから ここをカスタマイズできるうにする */}
-        <ul className="space-y-1 text-sm text-gray-500 list-disc list-inside">
+        <ul className="space-y-1 text-sm text-gray-500 ml-4">
           <li>
-            ExcludeDirs: {commonOptions.excludeDirs.join(', ')}
+            <div>
+              <label htmlFor="ExcludeDirs" className="block text-sm font-medium leading-6 text-gray-900">
+                Exclude Directories (comma separated):
+              </label>
+              <div className="mt-2">
+                <input
+                  name="ExcludeDirs"
+                  id="ExcludeDirs"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                  value={excludeDirs}
+                  onChange={(e) => setExcludeDirs(e.target.value)}
+                  placeholder={commonOptions.excludeDirs.join(', ')}
+                />
+              </div>
+            </div>
           </li>
-          <li>
-            ExcludeExts: {commonOptions.excludeExts.join(', ')}
+          <li className='pt-2'>
+            <div>
+              <label htmlFor="ExcludeExts" className="block text-sm font-medium leading-6 text-gray-900">
+                Exclude Extensions (comma separated):
+              </label>
+              <div className="mt-2">
+                <input
+                  name="ExcludeExts"
+                  id="ExcludeExts"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                  value={excludeExts}
+                  onChange={(e) => setExcludeExts(e.target.value)}
+                  placeholder={commonOptions.excludeExts.join(', ')}
+                />
+              </div>
+            </div>
           </li>
         </ul>
       </div>
