@@ -81,7 +81,7 @@ const cloc = async (folder: string): Promise<ClocResult> => {
     const args = [excludeDirs, excludeExts, '--by-file', '--json', folder];
 
     return new Promise((resolve) => {
-        const clocPath = path.join(__dirname, '..', 'node_modules/.bin/cloc');
+        const clocPath = path.join(__dirname, '..', 'cloc');
         const command = `${clocPath} ${args.join(' ')}`;
         const options = { maxBuffer: 1024 * 1024 * 100 };
         exec(command, options, (error, stdout, stderr) => {
