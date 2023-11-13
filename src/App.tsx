@@ -105,7 +105,7 @@ function App() {
                     )}
                   </Disclosure.Button>
                 </div>
-                <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <div className="flex  flex-1 items-center justify-center sm:items-stretch sm:justify-between">
                   <div className="flex flex-shrink-0 items-center">
                     <Link to="/">
                       <p className="text-white font-bold text-2xl">RefacTool</p>

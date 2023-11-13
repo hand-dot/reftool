@@ -135,7 +135,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
       </div>
 
       <div>
-        <h2 className="mb-2 text-md text-gray-500">Setting:</h2>
+        <h2 className="mb-2 text-md text-gray-500">Setting(Will be customizable in the future):</h2>
         <ul className="space-y-1 text-sm text-gray-500 list-disc list-inside">
           <li>
             ExcludeDirs: {commonOptions.excludeDirs.join(', ')}

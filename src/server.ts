@@ -161,17 +161,25 @@ app.get('/init', async (req, res) => {
 })
 
 app.post('/gpt', async (req, res) => {
-    const { message } = req.body;
-    // TODO ここから
-    const openAi = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const completion = await openAi.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: message }],
-    });
-    // TODO ストリームにする
-    res.json({ message: completion.choices[0].message.content })
-});
+    const { message, apiKey } = req.body;
 
+    if (!message || !apiKey) {
+        res.status(400).json({ message: '' })
+        return;
+    }
+
+    try {
+        const openAi = new OpenAI({ apiKey });
+        const completion = await openAi.chat.completions.create({
+            model: "gpt-4-1106-preview",
+            messages: [{ role: "user", content: message }],
+        });
+        res.json({ message: completion.choices[0].message.content })
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: '' })
+    }
+});
 app.get('/isFileChanged', (req, res) => {
     res.json({ changed: !DB.ready })
 });

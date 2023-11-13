@@ -111,11 +111,21 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
     if (processing) {
       return;
     }
+
+    const _apiKey = localStorage.getItem('apiKey');
+    const apiKey = prompt('Please enter your API key.\n (sk-...xxx)', _apiKey || "")
+
+    if (!apiKey) {
+      alert('Please enter your API key.')
+      return;
+    }
+
     setProcessing(true)
     fetch(`${BASEURL}/gpt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
+        apiKey,
         message: `Please refactor the following duplicate code.
 --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
 ${a.content}
@@ -125,7 +135,14 @@ ${b.content}
     })
       .then((response) => response.json())
       .then(({ message }) => {
-        setMarkdown(message)
+        if (message) {
+          if (apiKey) {
+            localStorage.setItem('apiKey', apiKey);
+          }
+          setMarkdown(message)
+        } else {
+          alert('An error has occurred.')
+        }
       }).finally(() => {
         setProcessing(false)
       })
@@ -195,7 +212,8 @@ ${b.content}
           Receive GPT's refactoring suggestions
         </h2>
         <p className="mt-2 text-center text-gray-500">
-          Let's obtain refactoring advice from GPT using the above duplicated code information.
+          Let's obtain refactoring advice from GPT using the above duplicated code information.<br />
+          (In the future, prompts will become customizable.)
         </p>
 
         {markdown ?

@@ -18,7 +18,7 @@ TODO
 - [x] 初期のローディング画面
 - [x] npx で起動してローカルでサーバーが立ち上がる(インストール不要)
 - [ ] Open AIのトークンを設定できるようにする(ローカルストレージ)、ストリームできるようにする
-- [ ] How it works、How to useの説明を README, ページに書きたい
+- [ ] How it works、How to useの説明を READMEに書く
 - [ ] betaリリース
 - [ ] FIXMEを直す
 
