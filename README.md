@@ -1,9 +1,9 @@
-# RefacTool
+# RefTool
 
 ![](./public/top.png)
 
 ```bash
-npx refactool
+npx reftool
 ```
 
 ---
@@ -15,7 +15,7 @@ By setting up an OpenAI token, it can offer refactoring advice based on the diag
 
 ![](./public/duplicatedcode.png)
 
-RefacTool combines various refactoring tools into a user-friendly package, saving you the hassle of remembering different instructions for each tool.
+RefTool combines various refactoring tools into a user-friendly package, saving you the hassle of remembering different instructions for each tool.
 
 It can be easily launched using npx, ensuring a hassle-free experience.
 
@@ -50,7 +50,7 @@ npx reftool ./src
 
 ### How It Works?
 
-RefacTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd](https://github.com/kucherenko/jscpd). It runs a local server to monitor and analyze files.  
+RefTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd](https://github.com/kucherenko/jscpd). It runs a local server to monitor and analyze files.  
  Future plans include integrating more tools like [ts-prune](https://github.com/nadeesha/ts-prune). Suggestions for other tools are appreciated.
 
 ---

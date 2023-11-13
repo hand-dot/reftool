@@ -11,7 +11,7 @@ import { HomeIcon } from '@heroicons/react/20/solid'
 import toast, { Toaster } from 'react-hot-toast';
 
 const navigation: { name: string; href: string; current: boolean }[] = [
-  { name: 'GitHub', href: 'https://github.com/hand-dot/refactool', current: false },
+  { name: 'GitHub', href: 'https://github.com/hand-dot/reftool', current: false },
 ]
 
 function classNames(...classes: string[]) {
@@ -108,7 +108,7 @@ function App() {
                 <div className="flex  flex-1 items-center justify-center sm:items-stretch sm:justify-between">
                   <div className="flex flex-shrink-0 items-center">
                     <Link to="/">
-                      <p className="text-white font-bold text-2xl">RefacTool</p>
+                      <p className="text-white font-bold text-2xl">RefTool</p>
                     </Link>
                   </div>
                   <div className="hidden sm:ml-6 sm:block">

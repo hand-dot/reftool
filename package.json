@@ -1,10 +1,10 @@
 {
-  "name": "refactool",
+  "name": "reftool",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "bin": {
-    "refactool": "./start.js"
+    "reftool": "./start.js"
   },
   "scripts": {
     "dev": "./dev.sh",
