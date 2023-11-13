@@ -227,6 +227,8 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
         </h2>
         <p className="mt-2 text-center text-gray-500">
           Let's obtain refactoring advice from GPT using the above duplicated code information.<br />
+          Get API key from here {'->'} <a className='text-blue-600 dark:text-blue-500 hover:underline' target='_blank' href="https://platform.openai.com/api-keys">https://platform.openai.com/api-keys</a> 
+          <br />
           (In the future, prompts will become customizable.)
         </p>
 
