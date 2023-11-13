@@ -141,6 +141,28 @@ const analyze = async () => {
     return { time, jscpdResult, clocResults };
 }
 
+async function* streamChatCompletion(params: { apiKey: string, message: string }) {
+    const { apiKey, message } = params;
+    const openAi = new OpenAI({ apiKey });
+    const stream = await openAi.chat.completions.create({
+        stream: true,
+        model: "gpt-4-1106-preview",
+        messages: [{ role: "user", content: message }],
+    }, {
+        stream: true,
+    });
+
+    for await (const chunk of stream) {
+        const finish_reason = chunk.choices[0].finish_reason;
+        const content = chunk.choices[0].delta.content;
+        if (finish_reason) {
+            return;
+        } else {
+            yield content;
+        }
+    }
+}
+
 // --------------APIS-----------------------
 
 app.get('/init', async (req, res) => {
@@ -161,6 +183,10 @@ app.get('/init', async (req, res) => {
 })
 
 app.post('/gpt', async (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("X-Accel-Buffering", "no");
+
     const { message, apiKey } = req.body;
 
     if (!message || !apiKey) {
@@ -169,17 +195,15 @@ app.post('/gpt', async (req, res) => {
     }
 
     try {
-        const openAi = new OpenAI({ apiKey });
-        const completion = await openAi.chat.completions.create({
-            model: "gpt-4-1106-preview",
-            messages: [{ role: "user", content: message }],
-        });
-        res.json({ message: completion.choices[0].message.content })
+        for await (const data of streamChatCompletion({ message, apiKey })) {
+            res.write(data);
+        }
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: '' })
+        return res.status(500).send({ message: "Internal server error" });
     }
+    res.end();
 });
+
 app.get('/isFileChanged', (req, res) => {
     res.json({ changed: !DB.ready })
 });

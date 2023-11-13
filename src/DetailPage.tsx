@@ -15,6 +15,27 @@ function getFileName(path: string) {
   return path.split('/').pop();
 }
 
+async function* streamChatCompletion(completion: any) {
+  const reader = completion.body?.getReader();
+
+  if (completion.status !== 200 || !reader) {
+    throw new Error("Request failed");
+  }
+
+  const decoder = new TextDecoder("utf-8");
+  let done = false;
+  while (!done) {
+    const { done: readDone, value } = await reader.read();
+    if (readDone) {
+      done = readDone;
+      reader.releaseLock();
+    } else {
+      const token = decoder.decode(value, { stream: true });
+      yield token;
+    }
+  }
+}
+
 function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
 
   const editorElemA = useRef<HTMLDivElement>(null)
@@ -107,7 +128,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
   const a = duplication.duplicationA
   const b = duplication.duplicationB
 
-  const callGpt = () => {
+  const callGpt = async () => {
     if (processing) {
       return;
     }
@@ -121,31 +142,24 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
     }
 
     setProcessing(true)
-    fetch(`${BASEURL}/gpt`, {
+    const completion = await fetch(`${BASEURL}/gpt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
         apiKey,
         message: `Please refactor the following duplicate code.
---${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
-${a.content}
---${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
-${b.content}
-`}),
-    })
-      .then((response) => response.json())
-      .then(({ message }) => {
-        if (message) {
-          if (apiKey) {
-            localStorage.setItem('apiKey', apiKey);
-          }
-          setMarkdown(message)
-        } else {
-          alert('An error has occurred.')
-        }
-      }).finally(() => {
-        setProcessing(false)
-      })
+        --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
+        ${a.content}
+        --${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
+        ${b.content}
+        `
+      }),
+    });
+    setProcessing(false)
+
+    for await (let token of streamChatCompletion(completion)) {
+      setMarkdown((prev => prev + token))
+    }
   }
 
   const aPath = `${(a.path)}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}`
