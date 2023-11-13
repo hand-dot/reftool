@@ -1,7 +1,15 @@
 {
   "name": "reftool",
-  "private": true,
+  "private": false,
   "version": "0.0.0",
+  "homepage": "https://github.com/hand-dot/reftool",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:hand-dot/reftool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hand-dot/reftool/issues"
+  },
   "type": "module",
   "bin": {
     "reftool": "./start.js"
