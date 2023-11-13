@@ -6,19 +6,18 @@ export const uuid = () =>
         const v = c == 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });
-
-// FIXME スラッシュで区切らず、文字列の比較のみ行なっているので、正しいファイル名でない可能性がある
-export const findCommonPrefix = (str1: string, str2: string) => {
+export const findCommonPrefix = (path1: string, path2: string) => {
     let prefix = "";
-    for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
-        if (str1[i] === str2[i]) {
-            prefix += str1[i];
+    for (let i = 0; i < Math.min(path1.length, path2.length); i++) {
+        if (path1[i] === path2[i]) {
+            prefix += path1[i];
         } else {
-            break;
+            let lastSlashIndex = prefix.lastIndexOf('/');
+            return prefix.substring(0, lastSlashIndex);
         }
     }
 
-    return prefix;
+    let lastSlashIndex = prefix.lastIndexOf('/');
+    return prefix.substring(0, lastSlashIndex);
 }
-
 export const getPotentialRemovals = (duplicationContent: DuplicationContent) => duplicationContent.end.line - duplicationContent.start.line

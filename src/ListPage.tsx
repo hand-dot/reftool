@@ -6,6 +6,8 @@ import type { Duplication, ClocResult, ClocFileDetails } from './types';
 import { findCommonPrefix, getPotentialRemovals } from './utils'
 import { commonOptions } from './constants';
 
+const RANK_NUM = 20;
+
 function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplication[], countLinesOfProjects: [ClocResult] | [ClocResult, ClocResult] }) {
 
   const item = duplications.map((duplication) => {
@@ -32,7 +34,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
       duplicationBTitle,
       potentialRemovals: getPotentialRemovals(duplication.duplicationA)
     }
-  }).splice(0, 10)
+  }).splice(0, RANK_NUM)
 
 
   const _countLinesOfProjects = countLinesOfProjects.map((countLinesOfProject) => {
@@ -51,7 +53,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
           code: v.code,
           language: v.language,
         }
-      }).filter((v) => v.filePath !== 'SUM' && v.filePath !== 'header' && v.filePath !== 'projectPath').splice(0, 10)
+      }).filter((v) => v.filePath !== 'SUM' && v.filePath !== 'header' && v.filePath !== 'projectPath').splice(0, RANK_NUM)
     }
   })
 
@@ -82,7 +84,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
                 ${open ? 'text-white' : 'text-white/90'}
                 group inline-flex items-center rounded-md bg-gray-700 px-2 py-1 text-sm hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75`}
                         >
-                          <span>Top 10 files by code count</span>
+                          <span>Top {Math.min(item.fileDetails.length, RANK_NUM)} files by code count</span>
                           <ChevronDownIcon
                             className={`${open ? 'text-gray-300' : 'text-gray-300/70'}
                   ml-2 h-5 w-5 transition duration-150 ease-in-out group-hover:text-gray-300/80`}
@@ -136,6 +138,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
 
       <div>
         <h2 className="mb-2 text-md text-gray-500">Setting(Will be customizable in the future):</h2>
+        {/* TODO ここから ここをカスタマイズできるうにする */}
         <ul className="space-y-1 text-sm text-gray-500 list-disc list-inside">
           <li>
             ExcludeDirs: {commonOptions.excludeDirs.join(', ')}

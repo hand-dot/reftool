@@ -78,13 +78,14 @@ RefTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd](
   - [x] npx で起動してローカルでサーバーが立ち上がる(インストール不要)
   - [x] Open AI のトークンを設定できるようにする(ローカルストレージ)、ストリームできるようにする
   - [x] How it works、How to use の説明を README に書く
-  - [ ] beta リリース
-  - [ ] FIXME を直す
+  - [x] beta リリース
   - [ ] カスタマイズ
-    - jscpd のオプションをカスタマイズできるよにする
-    - ChatGPT のプロンプトをカスタマイズできるようにする
+    - [ ] jscpd のオプションをカスタマイズできるよにする
+    - [ ] ChatGPT のプロンプトをカスタマイズできるようにする
   - [ ] ts-prune を使う
+  - Duplicated Code の readmore
   - cloc をスナップショットを撮れるようにする？
     - https://tailwindui.com/components/application-ui/data-display/stats#component-72704cac437a06d94cdb941c274591ba
     - 過去と比較してどのくらい減ったか表示したい
+  - [ ] FIXME を直す
 </details>
