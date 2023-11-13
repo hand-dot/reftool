@@ -57,6 +57,7 @@ RefacTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd
 
 <details>
   <summary>TODO</summary>
+
   - [x] モック画面の作成
   - [x] とりあえず static な path でいいから jscpd を実行して値をパースして一覧画面に飛ばす
     - パース結果はメモリに保持しておく
@@ -76,7 +77,7 @@ RefacTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd
   - [x] 初期のローディング画面
   - [x] npx で起動してローカルでサーバーが立ち上がる(インストール不要)
   - [x] Open AI のトークンを設定できるようにする(ローカルストレージ)、ストリームできるようにする
-  - [ ] How it works、How to use の説明を README に書く
+  - [x] How it works、How to use の説明を README に書く
   - [ ] beta リリース
   - [ ] FIXME を直す
   - [ ] カスタマイズ
