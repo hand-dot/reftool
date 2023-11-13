@@ -32,7 +32,9 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
   useEffect(() => {
     localStorage.setItem('excludeDirs', excludeDirs);
     localStorage.setItem('excludeExts', excludeExts);
+  }, [excludeDirs, excludeExts])
 
+  const updateOptions = () => {
     const options = {
       excludeDirs: excludeDirs.split(',').map((v) => v.trim()),
       excludeExts: excludeExts.split(',').map((v) => v.trim()),
@@ -43,9 +45,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
       body: JSON.stringify({ ...options }),
       headers: { 'Content-Type': 'application/json' }
     })
-
-
-  }, [excludeDirs, excludeExts])
+  }
 
   const item = duplications.map((duplication) => {
     const date = new Date(duplication.foundDate);
@@ -187,6 +187,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
                   id="ExcludeDirs"
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                   value={excludeDirs}
+                  onBlur={updateOptions}
                   onChange={(e) => setExcludeDirs(e.target.value)}
                   placeholder={commonOptions.excludeDirs.join(', ')}
                 />
@@ -204,6 +205,7 @@ function ListPage({ duplications, countLinesOfProjects }: { duplications: Duplic
                   id="ExcludeExts"
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                   value={excludeExts}
+                  onBlur={updateOptions}
                   onChange={(e) => setExcludeExts(e.target.value)}
                   placeholder={commonOptions.excludeExts.join(', ')}
                 />

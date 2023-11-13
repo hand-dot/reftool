@@ -39,7 +39,6 @@ function App() {
         return response.json()
       })
       .then(({ time, duplications, countLinesOfProjects }: AppData) => {
-        console.log(1)
         setDuplications(duplications)
         setCountLinesOfProjects(countLinesOfProjects)
         setAnalyzing(false)
@@ -56,6 +55,7 @@ function App() {
   }
 
   useEffect(() => {
+    analyze();
     const timerId = setInterval(() => {
       if (analyzing) {
         return;

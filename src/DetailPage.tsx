@@ -40,6 +40,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
 
   const editorElemA = useRef<HTMLDivElement>(null)
   const editorElemB = useRef<HTMLDivElement>(null)
+  const promptElem = useRef<HTMLTextAreaElement>(null)
   const [editorA, setEditorA] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
   const [editorB, setEditorB] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
   const [processing, setProcessing] = useState<boolean>(false)
@@ -128,6 +129,19 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
   const a = duplication.duplicationA
   const b = duplication.duplicationB
 
+  const getPrompt = () => {
+    return `Please refactor the following duplicate code.
+No need for redundant explanations. Please focus on 'Duplicated Range' and briefly advise on how it should be refactored.
+
+---
+
+--- File: ${a.path} | Duplicated Range${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column} ---
+${a.content}
+
+--- File: ${b.path} | Duplicated Range${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column} ---
+${b.content}`
+  }
+
   const callGpt = async () => {
     if (processing) {
       return;
@@ -141,18 +155,14 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
       return;
     }
 
+
     setProcessing(true)
     const completion = await fetch(`${BASEURL}/gpt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({
         apiKey,
-        message: `Please refactor the following duplicate code.
-        --${a.path}:${a.start.line}:${a.start.column}~${a.end.line}:${a.end.column}--
-        ${a.content}
-        --${b.path}:${b.start.line}:${b.start.column}~${b.end.line}:${b.end.column}--
-        ${b.content}
-        `
+        message: promptElem.current?.value,
       }),
     });
     setProcessing(false)
@@ -239,17 +249,33 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
             </div>
           </div>
           :
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            {/* TODO  プロンプトをカスタマイズできるうにする */}
-            <button
-              onClick={callGpt}
-              disabled={processing}
-              type="button"
-              className="flex items-center justify-center rounded-md border border-transparent bg-blue-500 py-2 px-4 text-base sm:text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {processing ? 'Processing...' : 'Call GPT'}
-            </button>
-          </div>}
+          <>
+            <div>
+              <label htmlFor="comment" className="block text-sm font-medium leading-6 text-gray-900">
+                Prompt
+              </label>
+              <div className="mt-2">
+                <textarea
+                  ref={promptElem}
+                  rows={4}
+                  name="comment"
+                  id="comment"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  defaultValue={getPrompt()}
+                />
+              </div>
+            </div>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <button
+                onClick={callGpt}
+                disabled={processing}
+                type="button"
+                className="flex items-center justify-center rounded-md border border-transparent bg-blue-500 py-2 px-4 text-base sm:text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processing ? 'Processing...' : 'Call GPT'}
+              </button>
+            </div>
+          </>}
       </div>
 
       {/* Back to home */}
@@ -264,7 +290,7 @@ function DetailPage({ duplication }: { duplication: Duplication | undefined }) {
           </Link>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

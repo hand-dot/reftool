@@ -79,9 +79,9 @@ RefTool uses tools like [cloc](https://github.com/kdridi/node-cloc) and [jscpd](
   - [x] Open AI のトークンを設定できるようにする(ローカルストレージ)、ストリームできるようにする
   - [x] How it works、How to use の説明を README に書く
   - [x] beta リリース
-  - [ ] カスタマイズ
+  - [x] カスタマイズ
     - [x] jscpd のオプションをカスタマイズできるよにする
-    - [ ] ChatGPT のプロンプトをカスタマイズできるようにする
+    - [x] ChatGPT のプロンプトをカスタマイズできるようにする
   - [ ] ts-prune を使う
   - Duplicated Code の readmore
   - cloc をスナップショットを撮れるようにする？
